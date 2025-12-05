@@ -6,8 +6,6 @@
  * 
  * Para transações parceladas, criamos múltiplos documentos (um por parcela)
  * com datas diferentes, vinculados por um groupId.
- * 
- * Inclui retry automático, tratamento de offline e cache local
  */
 
 import {
@@ -22,71 +20,9 @@ import {
   where,
   orderBy,
   writeBatch,
-  enableNetwork,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getServerTimestamp, addMonthsToDate, generateId } from '../helpers';
-
-// Configuração de retry (mesma do cards.js)
-const RETRY_CONFIG = {
-  maxRetries: 5,
-  initialDelay: 1000,
-  maxDelay: 30000,
-  backoffMultiplier: 2,
-};
-
-// Cache local para sincronização offline
-const localCache = new Map();
-const pendingOperations = [];
-
-/**
- * Aguarda com backoff exponencial
- */
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Calcula delay com backoff exponencial
- */
-const getBackoffDelay = (attempt) => {
-  const exponentialDelay = RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
-  return Math.min(exponentialDelay, RETRY_CONFIG.maxDelay);
-};
-
-/**
- * Tenta uma operação com retry automático
- */
-const executeWithRetry = async (operation, operationName) => {
-  let lastError;
-  
-  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      
-      // Não retry para erros de autenticação ou permissão
-      if (error.code === 'permission-denied' || error.code === 'unauthenticated') {
-        throw error;
-      }
-      
-      if (attempt === RETRY_CONFIG.maxRetries) {
-        console.error(`${operationName} falhou após ${RETRY_CONFIG.maxRetries} tentativas:`, error);
-        throw error;
-      }
-      
-      const backoffDelay = getBackoffDelay(attempt);
-      console.warn(`${operationName} falhou (tentativa ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1}), aguardando ${backoffDelay}ms...`);
-      await delay(backoffDelay);
-    }
-  }
-  
-  throw lastError;
-};
-
-/**
- * Verifica se está online
- */
-const isOnline = () => navigator.onLine;
 
 /**
  * Obtém a referência da subcoleção de transações do usuário
@@ -99,36 +35,16 @@ const getTransactionsCollection = (uid) => {
  * Cria uma transação simples (sem parcelamento)
  */
 export const createTransaction = async (uid, transactionData) => {
-  const operation = async () => {
+  try {
     const txRef = getTransactionsCollection(uid);
     const docRef = await addDoc(txRef, {
       ...transactionData,
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
-      synced: true,
     });
-    
-    // Salva no cache local
-    localCache.set(`txn_${docRef.id}`, {
-      id: docRef.id,
-      ...transactionData,
-      createdAt: new Date(),
-      synced: true,
-    });
-    
     return docRef.id;
-  };
-  
-  try {
-    return await executeWithRetry(operation, 'createTransaction');
   } catch (error) {
-    if (!isOnline()) {
-      console.warn('Offline: salvando transação localmente');
-      const tempId = `temp_${Date.now()}`;
-      localCache.set(`txn_${tempId}`, { id: tempId, ...transactionData, synced: false });
-      pendingOperations.push(operation);
-      return tempId;
-    }
+    console.error('Erro ao criar transação:', error);
     throw error;
   }
 };
