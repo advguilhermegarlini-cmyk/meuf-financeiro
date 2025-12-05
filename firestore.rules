@@ -39,12 +39,14 @@ service cloud.firestore {
     // Função auxiliar: valida dados de transação
     function isValidTransactionData() {
       let data = request.resource.data;
-      return data.keys().hasAll(['description', 'amount', 'type', 'date']) &&
-             data.description is string &&
-             data.amount is number &&
-             data.amount > 0 &&
-             data.type in ['income', 'expense'] &&
-             data.date is timestamp;
+          return data.keys().hasAll(['description', 'amount', 'type', 'date']) &&
+            data.description is string &&
+            data.amount is number &&
+            data.amount > 0 &&
+            // Allow 'transfer' type used by the UI in addition to income/expense
+            data.type in ['income', 'expense', 'transfer'] &&
+            // Accept either a Firestore timestamp or an ISO date string to be permissive
+            (data.date is timestamp || data.date is string);
     }
     
     // === COLEÇÃO: users ===

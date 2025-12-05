@@ -284,7 +284,7 @@ export const Dashboard = () => {
         {/* Cash Flow Chart */}
         <Card className="p-6 lg:col-span-2">
           <h3 className="text-lg font-semibold mb-4 text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
-          <div className="h-64 w-full">
+          <div className="h-64 w-full" style={{ minHeight: 256 }}>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={lineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
@@ -308,7 +308,7 @@ export const Dashboard = () => {
         {/* Pie Chart */}
         <Card className="p-6 lg:col-span-1">
           <h3 className="text-lg font-semibold mb-4 text-github-text">Gastos por Categoria</h3>
-          <div className="h-64 w-full flex flex-col items-center justify-center">
+          <div className="h-64 w-full flex flex-col items-center justify-center" style={{ minHeight: 256 }}>
             {categoryData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>

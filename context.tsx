@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Transaction, Category, Bank, DashboardStats, Investment, InvoiceStats } from './types';
 import { generateId, GITHUB_COLORS } from './utils';
-import { AuthService, DataService } from './services/auth';
+import { AuthService } from './services/auth';
+import { FirestoreDataService as DataService } from './services/firestoreData';
 
 export const SYSTEM_CATEGORY_ID = 'system_internal';
 
@@ -100,13 +101,23 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
           setIsLoading(true);
           try {
-              // Parallel Fetching for efficiency
-              const [txs, cats, bks, invs] = await Promise.all([
-                  DataService.getTransactions(user.id),
-                  DataService.getCategories(user.id),
-                  DataService.getBanks(user.id),
-                  DataService.getInvestments(user.id)
-              ]);
+                  // Parallel Fetching for efficiency
+                  // DEBUG: Log DataService to diagnose runtime issues where getTransactions isn't a function
+                  try {
+                    // eslint-disable-next-line no-console
+                    console.debug('DataService at fetch time:', DataService);
+                    // eslint-disable-next-line no-console
+                    console.debug('typeof DataService.getTransactions:', typeof (DataService as any).getTransactions);
+                  } catch (logErr) {
+                    // ignore logging errors
+                  }
+
+                  const [txs, cats, bks, invs] = await Promise.all([
+                      (DataService as any).getTransactions(user.id),
+                      (DataService as any).getCategories(user.id),
+                      (DataService as any).getBanks(user.id),
+                      (DataService as any).getInvestments(user.id)
+                  ]);
 
               setTransactions(txs);
               setCategories(cats);

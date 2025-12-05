@@ -10,6 +10,9 @@ import {
   updateProfile,
   setPersistence,
   browserLocalPersistence,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser,
 } from 'firebase/auth';
 import { auth } from '../src/firebase';
 import { createOrUpdateUser, getUserById } from '../src/services/users';
@@ -194,16 +197,28 @@ export const AuthService = {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Usuário não autenticado');
-      
-      // Verifica senha
-      await signInWithEmailAndPassword(auth, currentUser.email!, password);
-      
+
+      // Reautentica o usuário usando sua senha (necessário para operações sensíveis)
+      // Usa EmailAuthProvider para criar a credential
+      const email = currentUser.email;
+      if (!email) throw new Error('Email do usuário não disponível para reautenticação');
+
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+
       // Deleta conta do Firebase Auth
-      await currentUser.delete();
-      
-      // Aqui você poderia também deletar dados do Firestore
+      await deleteUser(currentUser);
+
+      // Aqui você poderia também deletar dados do Firestore (chamar um helper)
     } catch (error: any) {
       console.error('Erro ao deletar conta:', error);
+      // Mapear erros comuns para mensagens legíveis
+      if (error && error.code === 'auth/invalid-credential') {
+        throw new Error('Credenciais inválidas. Verifique sua senha e tente novamente.');
+      }
+      if (error && error.code === 'auth/requires-recent-login') {
+        throw new Error('Operação sensível requer login recente. Faça logout e login novamente e tente outra vez.');
+      }
       throw new Error(error.message || 'Erro ao deletar conta');
     }
   },
@@ -212,9 +227,10 @@ export const AuthService = {
 /**
  * DataService - Serviços de dados (mantém a interface compatível)
  */
-export const DataService = {
+// Internal helper for auth-related cleanup (not exported as DataService)
+const AuthInternal = {
   async deleteAllUserData(userId: string) {
     // Implementar lógica de limpeza de dados do usuário no Firestore
-    console.log('Deletando dados do usuário:', userId);
+    console.log('AuthInternal: deletando dados do usuário:', userId);
   },
 };
