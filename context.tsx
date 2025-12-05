@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Transaction, Category, Bank, DashboardStats, Investment, InvoiceStats } from './types';
 import { generateId, GITHUB_COLORS } from './utils';
-import { AuthService, DataService } from './services/api';
+import { AuthService, DataService } from './services/auth';
 
 export const SYSTEM_CATEGORY_ID = 'system_internal';
 
