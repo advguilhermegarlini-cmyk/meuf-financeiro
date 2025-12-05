@@ -1,0 +1,120 @@
+/**
+ * Firestore Security Rules
+ * 
+ * Regras de segurança para o Firestore.
+ * Cada usuário só pode acessar seus próprios dados.
+ * 
+ * Estrutura:
+ * - users/{uid} → Perfil do usuário
+ * - users/{uid}/cards/{cardId} → Cartões do usuário
+ * - users/{uid}/transactions/{transactionId} → Transações do usuário
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Função auxiliar: verifica se o usuário autenticado é o dono do documento
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+    
+    // Função auxiliar: valida dados de usuário
+    function isValidUserData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['email']) &&
+             data.email is string &&
+             data.email.size() > 0;
+    }
+    
+    // Função auxiliar: valida dados de cartão
+    function isValidCardData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'number', 'balance']) &&
+             data.name is string &&
+             data.number is string &&
+             data.balance is number;
+    }
+    
+    // Função auxiliar: valida dados de transação
+    function isValidTransactionData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['description', 'amount', 'type', 'date']) &&
+             data.description is string &&
+             data.amount is number &&
+             data.amount > 0 &&
+             data.type in ['income', 'expense'] &&
+             data.date is timestamp;
+    }
+    
+    // === COLEÇÃO: users ===
+    
+    // Regras para documentos de usuário (perfil)
+    match /users/{uid} {
+      
+      // Leitura: usuário logado pode ler seu próprio perfil
+      allow read: if request.auth != null && isOwner(uid);
+      
+      // Criação: usuário pode criar seu próprio perfil
+      allow create: if request.auth != null && isOwner(uid) && isValidUserData();
+      
+      // Atualização: usuário pode atualizar seu próprio perfil
+      allow update: if request.auth != null && isOwner(uid) && isValidUserData();
+      
+      // Deleção: usuário pode deletar sua própria conta
+      allow delete: if request.auth != null && isOwner(uid);
+      
+      
+      // === SUBCOLEÇÃO: cards ===
+      
+      // Regras para cartões do usuário
+      match /cards/{cardId} {
+        
+        // Leitura: usuário pode ler seus próprios cartões
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar seus próprios cartões
+        allow create: if request.auth != null && isOwner(uid) && isValidCardData();
+        
+        // Atualização: usuário pode atualizar seus próprios cartões
+        allow update: if request.auth != null && isOwner(uid) && isValidCardData();
+        
+        // Deleção: usuário pode deletar seus próprios cartões
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: transactions ===
+      
+      // Regras para transações do usuário
+      match /transactions/{transactionId} {
+        
+        // Leitura: usuário pode ler suas próprias transações
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar suas próprias transações
+        allow create: if request.auth != null && isOwner(uid) && isValidTransactionData();
+        
+        // Atualização: usuário pode atualizar suas próprias transações
+        allow update: if request.auth != null && isOwner(uid) && isValidTransactionData();
+        
+        // Deleção: usuário pode deletar suas próprias transações
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: profile (alternativa) ===
+      // Opcional: se quiser manter dados extras em subcoleção
+      
+      match /profile/{document=**} {
+        allow read: if request.auth != null && isOwner(uid);
+        allow write: if request.auth != null && isOwner(uid);
+      }
+    }
+    
+    // Nega qualquer outro acesso
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

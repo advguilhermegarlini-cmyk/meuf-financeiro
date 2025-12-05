@@ -1,0 +1,215 @@
+/**
+ * Example App Component
+ * 
+ * Exemplo de como usar os componentes, hooks e serviços.
+ * Este arquivo demonstra a integração completa do Firebase.
+ */
+
+import { useState } from 'react';
+import { useAuth } from './hooks/useAuth';
+import { CardsList } from './components/CardsList';
+import { TransactionsList } from './components/TransactionsList';
+import { UsersList } from './components/UsersList';
+
+function App() {
+  const { user, loading, error, login, signup, logout, isAuthenticated } =
+    useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showAuthForm, setShowAuthForm] = useState('login');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    displayName: '',
+  });
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (showAuthForm === 'login') {
+        await login(formData.email, formData.password);
+      } else {
+        await signup(formData.email, formData.password, formData.displayName);
+      }
+      setFormData({ email: '', password: '', displayName: '' });
+    } catch (err) {
+      alert(`Erro: ${err.message}`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <h1 className="text-3xl font-bold text-center mb-6">
+            Meu Financeiro
+          </h1>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {showAuthForm === 'signup' && (
+              <input
+                type="text"
+                placeholder="Nome"
+                value={formData.displayName}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    displayName: e.target.value,
+                  })
+                }
+                className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-blue-500"
+                required={showAuthForm === 'signup'}
+              />
+            )}
+
+            <input
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-blue-500"
+              required
+            />
+
+            <input
+              type="password"
+              placeholder="Senha"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-blue-500"
+              required
+            />
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition"
+            >
+              {showAuthForm === 'login' ? 'Entrar' : 'Cadastrar'}
+            </button>
+          </form>
+
+          <button
+            onClick={() => {
+              setShowAuthForm(
+                showAuthForm === 'login' ? 'signup' : 'login'
+              );
+              setFormData({ email: '', password: '', displayName: '' });
+            }}
+            className="w-full mt-4 text-blue-600 hover:underline text-sm"
+          >
+            {showAuthForm === 'login'
+              ? 'Não tem conta? Cadastre-se'
+              : 'Já tem conta? Faça login'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Meu Financeiro</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">
+              Bem-vindo, {user?.displayName || user?.email}
+            </span>
+            <button
+              onClick={logout}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 flex gap-8">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-3 font-medium border-b-2 transition ${
+              activeTab === 'dashboard'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('cards')}
+            className={`px-4 py-3 font-medium border-b-2 transition ${
+              activeTab === 'cards'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Cartões
+          </button>
+          <button
+            onClick={() => setActiveTab('transactions')}
+            className={`px-4 py-3 font-medium border-b-2 transition ${
+              activeTab === 'transactions'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Transações
+          </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-3 font-medium border-b-2 transition ${
+              activeTab === 'users'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Usuários
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="py-6">
+        {activeTab === 'dashboard' && (
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+            <p className="text-gray-600">
+              Bem-vindo ao seu painel de controle financeiro. Use os tabs acima
+              para gerenciar seus cartões e transações.
+            </p>
+          </div>
+        )}
+
+        {activeTab === 'cards' && <CardsList />}
+        {activeTab === 'transactions' && <TransactionsList />}
+        {activeTab === 'users' && <UsersList />}
+      </main>
+    </div>
+  );
+}
+
+export default App;
