@@ -10,6 +10,50 @@ import { getUserById } from './src/services/users';
 
 export const SYSTEM_CATEGORY_ID = 'system_internal';
 
+/**
+ * Helper: Retry com exponential backoff para operações assíncronas
+ * @param fn - Função assíncrona a executar
+ * @param maxAttempts - Número máximo de tentativas (default: 3)
+ * @param initialDelay - Delay inicial em ms (default: 1000)
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxAttempts: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Se for erro não-recuperável, não tenta novamente
+      if (error instanceof Error && 
+          (error.message.includes('validation') || 
+           error.message.includes('obrigatória') ||
+           error.message.includes('inválido'))) {
+        console.error(`❌ Erro de validação (não recuperável):`, error.message);
+        throw error;
+      }
+      
+      // Se foi última tentativa, relança
+      if (attempt === maxAttempts) {
+        console.error(`❌ Falha após ${maxAttempts} tentativas:`, error);
+        throw error;
+      }
+      
+      // Aguarda antes de tentar novamente (exponential backoff)
+      const delay = initialDelay * Math.pow(2, attempt - 1);
+      console.warn(`⏳ Tentativa ${attempt} falhou, retentando em ${delay}ms...`, error);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError || new Error('Operação falhou após todas as tentativas');
+};
+
 interface AppContextType {
   user: User | null;
   theme: 'light' | 'dark';
@@ -349,10 +393,21 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     // --- API CALLS ---
     console.log('📤 Enviando', newTxList.length, 'transações para o Firestore...');
     try {
-      const createdTxs = await DataService.createTransactionsBatch(user.id, newTxList);
+      // Usar retry com backoff para melhor resiliência
+      const createdTxs = await retryWithBackoff(
+        () => DataService.createTransactionsBatch(user.id, newTxList),
+        3,  // maxAttempts
+        1000  // initialDelay em ms
+      );
+      
       console.log('✅ Transações criadas no Firestore:', createdTxs);
+      
       if (bankUpdates.length > 0) {
-          await DataService.updateBankBalances(user.id, bankUpdates);
+        await retryWithBackoff(
+          () => DataService.updateBankBalances(user.id, bankUpdates),
+          2,
+          500
+        );
       }
 
       // --- STATE UPDATES ---
@@ -365,8 +420,12 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
           }));
       }
     } catch (error) {
-      console.error('❌ ERRO ao adicionar transação:', error);
-      throw error;
+      console.error('❌ ERRO ao adicionar transação (falha após retries):', error);
+      // Não relança - permite que o usuário tente novamente manualmente
+      // Em produção, você poderia mostrar um toast/notificação
+      if (error instanceof Error) {
+        alert(`Erro ao salvar transação: ${error.message}`);
+      }
     }
   };
 
