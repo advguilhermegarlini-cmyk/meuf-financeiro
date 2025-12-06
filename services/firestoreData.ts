@@ -26,8 +26,8 @@ export const FirestoreDataService = {
 
   async createTransaction(userId: string, transaction: any) {
     const tx = { ...transaction, date: normalizeDate(transaction.date) };
-    await txSvc.createTransaction(userId, tx);
-    return tx;
+    const result = await txSvc.createTransaction(userId, tx);
+    return result;
   },
 
   async createTransactionsBatch(userId: string, transactions: any[]) {

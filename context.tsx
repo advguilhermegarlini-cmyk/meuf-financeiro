@@ -348,20 +348,25 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
     // --- API CALLS ---
     console.log('📤 Enviando', newTxList.length, 'transações para o Firestore...');
-    const createdTxs = await DataService.createTransactionsBatch(user.id, newTxList);
-    console.log('✅ Transações criadas no Firestore:', createdTxs);
-    if (bankUpdates.length > 0) {
-        await DataService.updateBankBalances(user.id, bankUpdates);
-    }
+    try {
+      const createdTxs = await DataService.createTransactionsBatch(user.id, newTxList);
+      console.log('✅ Transações criadas no Firestore:', createdTxs);
+      if (bankUpdates.length > 0) {
+          await DataService.updateBankBalances(user.id, bankUpdates);
+      }
 
-    // --- STATE UPDATES ---
-    // Use the transactions returned from Firestore (which have correct IDs)
-    setTransactions(prev => [...createdTxs, ...prev]);
-    if (bankUpdates.length > 0) {
-        setBanks(prev => prev.map(b => {
-            const update = bankUpdates.find(u => u.id === b.id);
-            return update ? { ...b, balance: update.balance } : b;
-        }));
+      // --- STATE UPDATES ---
+      // Use the transactions returned from Firestore (which have correct IDs)
+      setTransactions(prev => [...createdTxs, ...prev]);
+      if (bankUpdates.length > 0) {
+          setBanks(prev => prev.map(b => {
+              const update = bankUpdates.find(u => u.id === b.id);
+              return update ? { ...b, balance: update.balance } : b;
+          }));
+      }
+    } catch (error) {
+      console.error('❌ ERRO ao adicionar transação:', error);
+      throw error;
     }
   };
 
