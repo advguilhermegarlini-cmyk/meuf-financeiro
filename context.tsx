@@ -247,13 +247,13 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
   const addTransaction = async (t: Omit<Transaction, 'id'>, recurrence?: { frequency: string, times: number }) => {
     if (!user) return;
-    const newTxList: Transaction[] = [];
+    const newTxList: Omit<Transaction, 'id'>[] = [];
     const bankUpdates: {id: string, balance: number}[] = [];
     
     // Logic for generating transaction objects...
     // 1. Transfers
     if (t.type === 'transfer' && t.toBankId) {
-       const transferTx: Transaction = { ...t, id: generateId(), categoryId: SYSTEM_CATEGORY_ID };
+       const transferTx: Omit<Transaction, 'id'> = { ...t, categoryId: SYSTEM_CATEGORY_ID };
        newTxList.push(transferTx);
        
        const source = banks.find(b => b.id === t.bankId);
@@ -263,7 +263,6 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     } 
     // 2. Recurring
     else if (recurrence && recurrence.times > 1) {
-        const groupId = generateId();
         const originalDate = new Date(t.date);
 
         for (let i = 0; i < recurrence.times; i++) {
@@ -273,11 +272,10 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
             if (recurrence.frequency === 'monthly') newDate.setMonth(newDate.getMonth() + i);
             if (recurrence.frequency === 'yearly') newDate.setFullYear(newDate.getFullYear() + i);
 
-            const tx: Transaction = {
+            const tx: Omit<Transaction, 'id'> = {
                 ...t,
-                id: generateId(),
                 date: newDate.toISOString(),
-                recurrenceGroupId: groupId,
+                recurrenceGroupId: generateId(),
                 recurrenceFrequency: recurrence.frequency as any
             };
             newTxList.push(tx);
@@ -325,7 +323,6 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
             
             newTxList.push({
                 ...t,
-                id: i === 0 ? parentId : generateId(),
                 originalTransactionId: parentId,
                 amount: installmentAmount,
                 date: dueDate.toISOString(), 
@@ -338,7 +335,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     } 
     // 4. Standard
     else {
-      newTxList.push({ ...t, id: generateId() });
+      newTxList.push({ ...t });
       if (!t.isCreditCard) {
           const b = banks.find(b => b.id === t.bankId);
           if (b) {

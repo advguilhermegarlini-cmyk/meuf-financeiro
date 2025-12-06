@@ -56,7 +56,9 @@ export const createTransaction = async (uid, transactionData) => {
     console.log('🔵 createTransaction - dataToSave:', dataToSave);
     const docRef = await addDoc(txRef, dataToSave);
     console.log('🔵 createTransaction - saved with ID:', docRef.id);
-    return { id: docRef.id, ...transactionData };
+    
+    // Retorna com o ID correto do Firestore, não o ID local
+    return { id: docRef.id, ...cleanedData, createdAt: new Date(), updatedAt: new Date() };
   } catch (error) {
     console.error('Erro ao criar transação:', error);
     throw error;
