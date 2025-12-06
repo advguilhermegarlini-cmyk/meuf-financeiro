@@ -208,11 +208,18 @@ export const getInstallmentsByGroupId = async (uid, groupId) => {
 export const updateTransaction = async (uid, transactionId, updates) => {
   try {
     const txRef = doc(db, 'users', uid, 'transactions', transactionId);
-    await updateDoc(txRef, {
+    const cleanedUpdates = cleanData({
       ...updates,
       updatedAt: getServerTimestamp(),
     });
-    return transactionId;
+    await updateDoc(txRef, cleanedUpdates);
+    
+    // Retorna a transação atualizada completa
+    const updatedDoc = await getDoc(txRef);
+    if (updatedDoc.exists()) {
+      return { id: updatedDoc.id, ...updatedDoc.data() };
+    }
+    return { id: transactionId, ...updates };
   } catch (error) {
     console.error('Erro ao atualizar transação:', error);
     throw error;

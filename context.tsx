@@ -439,8 +439,8 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     // assuming simple text/category edits or that backend handles logic.
     // In a full app, you'd reverse old transaction effect and apply new one.
     
-    await DataService.updateTransaction(user.id, t);
-    setTransactions(prev => prev.map(curr => curr.id === t.id ? t : curr));
+    const updatedTransaction = await DataService.updateTransaction(user.id, t);
+    setTransactions(prev => prev.map(curr => curr.id === t.id ? updatedTransaction : curr));
   };
 
   const payInvoice = async (cardId: string, amount: number, paymentDate: Date, sourceBankId: string, isFullPayment: boolean) => {

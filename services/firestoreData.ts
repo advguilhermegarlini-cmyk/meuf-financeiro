@@ -42,8 +42,8 @@ export const FirestoreDataService = {
 
   async updateTransaction(userId: string, transaction: any) {
     const tx = { ...transaction, date: normalizeDate(transaction.date) };
-    await txSvc.updateTransaction(userId, tx.id, tx);
-    return tx;
+    const updated = await txSvc.updateTransaction(userId, tx.id, tx);
+    return updated || tx;
   },
 
   async deleteTransactions(userId: string, ids: string[]) {
