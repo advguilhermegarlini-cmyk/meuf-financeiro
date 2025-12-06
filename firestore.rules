@@ -86,10 +86,10 @@ service cloud.firestore {
       allow read: if request.auth != null && isOwner(uid);
       
       // Criação: usuário pode criar seu próprio perfil
-      allow create: if request.auth != null && isOwner(uid) && isValidUserData();
+      allow create: if request.auth != null && isOwner(uid);
       
       // Atualização: usuário pode atualizar seu próprio perfil
-      allow update: if request.auth != null && isOwner(uid) && isValidUserData();
+      allow update: if request.auth != null && isOwner(uid);
       
       // Deleção: usuário pode deletar sua própria conta
       allow delete: if request.auth != null && isOwner(uid);
@@ -104,10 +104,10 @@ service cloud.firestore {
         allow read: if request.auth != null && isOwner(uid);
         
         // Criação: usuário pode criar seus próprios cartões
-        allow create: if request.auth != null && isOwner(uid) && isValidCardData();
+        allow create: if request.auth != null && isOwner(uid);
         
         // Atualização: usuário pode atualizar seus próprios cartões
-        allow update: if request.auth != null && isOwner(uid) && isValidCardData();
+        allow update: if request.auth != null && isOwner(uid);
         
         // Deleção: usuário pode deletar seus próprios cartões
         allow delete: if request.auth != null && isOwner(uid);
@@ -123,10 +123,10 @@ service cloud.firestore {
         allow read: if request.auth != null && isOwner(uid);
         
         // Criação: usuário pode criar suas próprias categorias
-        allow create: if request.auth != null && isOwner(uid) && isValidCategoryData();
+        allow create: if request.auth != null && isOwner(uid);
         
         // Atualização: usuário pode atualizar suas próprias categorias
-        allow update: if request.auth != null && isOwner(uid) && isValidCategoryData();
+        allow update: if request.auth != null && isOwner(uid);
         
         // Deleção: usuário pode deletar suas próprias categorias
         allow delete: if request.auth != null && isOwner(uid);
@@ -142,10 +142,10 @@ service cloud.firestore {
         allow read: if request.auth != null && isOwner(uid);
         
         // Criação: usuário pode criar seus próprios bancos
-        allow create: if request.auth != null && isOwner(uid) && isValidBankData();
+        allow create: if request.auth != null && isOwner(uid);
         
         // Atualização: usuário pode atualizar seus próprios bancos
-        allow update: if request.auth != null && isOwner(uid) && isValidBankData();
+        allow update: if request.auth != null && isOwner(uid);
         
         // Deleção: usuário pode deletar seus próprios bancos
         allow delete: if request.auth != null && isOwner(uid);
@@ -161,10 +161,10 @@ service cloud.firestore {
         allow read: if request.auth != null && isOwner(uid);
         
         // Criação: usuário pode criar seus próprios investimentos
-        allow create: if request.auth != null && isOwner(uid) && isValidInvestmentData();
+        allow create: if request.auth != null && isOwner(uid);
         
         // Atualização: usuário pode atualizar seus próprios investimentos
-        allow update: if request.auth != null && isOwner(uid) && isValidInvestmentData();
+        allow update: if request.auth != null && isOwner(uid);
         
         // Deleção: usuário pode deletar seus próprios investimentos
         allow delete: if request.auth != null && isOwner(uid);
@@ -180,10 +180,10 @@ service cloud.firestore {
         allow read: if request.auth != null && isOwner(uid);
         
         // Criação: usuário pode criar suas próprias transações
-        allow create: if request.auth != null && isOwner(uid) && isValidTransactionData();
+        allow create: if request.auth != null && isOwner(uid);
         
         // Atualização: usuário pode atualizar suas próprias transações
-        allow update: if request.auth != null && isOwner(uid) && isValidTransactionData();
+        allow update: if request.auth != null && isOwner(uid);
         
         // Deleção: usuário pode deletar suas próprias transações
         allow delete: if request.auth != null && isOwner(uid);
