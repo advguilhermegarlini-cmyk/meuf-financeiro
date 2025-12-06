@@ -6,7 +6,6 @@ import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { CreditCardsModule, BanksModule, CategoriesModule, InvestmentsModule } from './components/FinanceModules';
 import { ShieldCheck, User as UserIcon, AlertTriangle, Camera, Lock, ArrowLeft } from 'lucide-react';
-import DebugPanel from './components/DebugPanel';
 
 interface ErrorBoundaryProps {
   children?: React.ReactNode;
@@ -483,7 +482,6 @@ export default function App() {
     <ErrorBoundary>
         <AppProvider>
         <MainApp />
-        <DebugPanel />
         </AppProvider>
     </ErrorBoundary>
   );
