@@ -45,20 +45,27 @@ const getTransactionsCollection = (uid) => {
  */
 export const createTransaction = async (uid, transactionData) => {
   try {
+    console.log(`🚀 [createTransaction] Iniciando para UID: ${uid}`);
+    console.log(`📦 [createTransaction] Dados recebidos:`, transactionData);
+    
     const txRef = getTransactionsCollection(uid);
     const cleanedData = cleanData(transactionData);
+    console.log(`✂️ [createTransaction] Dados após limpar:`, cleanedData);
+    
     const dataToSave = {
       ...cleanedData,
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
     };
+    console.log(`📝 [createTransaction] Dados a salvar no Firestore:`, dataToSave);
+    
     const docRef = await addDoc(txRef, dataToSave);
-    console.log('✅ Transação criada com ID:', docRef.id);
+    console.log(`✅ [createTransaction] Transação salva com ID: ${docRef.id}`);
     
     // Retorna com o ID correto do Firestore, não o ID local
     return { id: docRef.id, ...cleanedData, createdAt: new Date(), updatedAt: new Date() };
   } catch (error) {
-    console.error('Erro ao criar transação:', error);
+    console.error(`❌ [createTransaction] ERRO:`, error);
     throw error;
   }
 };
