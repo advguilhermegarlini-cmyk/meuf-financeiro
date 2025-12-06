@@ -516,9 +516,10 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
   const addCategory = async (name: string, type: 'income' | 'expense') => {
     if(!user) return;
     const color = GITHUB_COLORS[categories.length % GITHUB_COLORS.length];
-    const newCat = { id: generateId(), name, color, type };
+    const categoryData = { name, color, type };
     
-    await DataService.createCategory(user.id, newCat);
+    // Firestore gera o ID automaticamente e retorna
+    const newCat = await DataService.createCategory(user.id, categoryData);
     setCategories(prev => [...prev, newCat]);
   };
 
@@ -541,8 +542,8 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
   const addBank = async (bank: Omit<Bank, 'id'>) => {
     if(!user) return;
-    const newBank = { ...bank, id: generateId() };
-    await DataService.saveBank(user.id, newBank);
+    // Firestore gera o ID automaticamente
+    const newBank = await DataService.saveBank(user.id, bank as any);
     setBanks(prev => [...prev, newBank]);
   };
 
@@ -560,8 +561,8 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
   const addInvestment = async (inv: Omit<Investment, 'id'>) => {
     if(!user) return;
-    const newInv = { ...inv, id: generateId() };
-    await DataService.saveInvestment(user.id, newInv);
+    // Firestore gera o ID automaticamente
+    const newInv = await DataService.saveInvestment(user.id, inv as any);
     setInvestments(prev => [...prev, newInv]);
   };
 
