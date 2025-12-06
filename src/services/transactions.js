@@ -25,6 +25,15 @@ import { db } from '../firebase';
 import { getServerTimestamp, addMonthsToDate, generateId } from '../helpers';
 
 /**
+ * Remove campos undefined do objeto (Firebase não permite undefined)
+ */
+const cleanData = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined)
+  );
+};
+
+/**
  * Obtém a referência da subcoleção de transações do usuário
  */
 const getTransactionsCollection = (uid) => {
@@ -37,8 +46,9 @@ const getTransactionsCollection = (uid) => {
 export const createTransaction = async (uid, transactionData) => {
   try {
     const txRef = getTransactionsCollection(uid);
+    const cleanedData = cleanData(transactionData);
     const docRef = await addDoc(txRef, {
-      ...transactionData,
+      ...cleanedData,
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
     });
@@ -77,7 +87,7 @@ export const createInstallmentTransaction = async (
       const installmentDate = addMonthsToDate(baseDate, i);
 
       const docRef = doc(txRef);
-      batch.set(docRef, {
+      const installmentData = cleanData({
         ...transactionData,
         amount: baseAmount,
         installmentNumber: i + 1,
@@ -87,6 +97,7 @@ export const createInstallmentTransaction = async (
         createdAt: getServerTimestamp(),
         updatedAt: getServerTimestamp(),
       });
+      batch.set(docRef, installmentData);
     }
 
     await batch.commit();
