@@ -2,6 +2,9 @@ import { Timestamp } from 'firebase/firestore';
 import * as txSvc from '../src/services/transactions';
 import * as cardSvc from '../src/services/cards';
 import * as userSvc from '../src/services/users';
+import * as categorySvc from '../src/services/categories';
+import * as bankSvc from '../src/services/banks';
+import * as investmentSvc from '../src/services/investments';
 import { DataService as LocalDataService } from './api';
 
 // Helper: normalize date to JS Date so Firestore stores a Timestamp
@@ -49,55 +52,65 @@ export const FirestoreDataService = {
     }
   },
 
-  // CATEGORIES (fallback to local until Firestore categories implemented)
+  // CATEGORIES
   async getCategories(userId: string) {
-    return await LocalDataService.getCategories(userId);
+    return await categorySvc.getCategoriesByUserId(userId);
   },
 
   async createCategory(userId: string, category: any) {
-    return await LocalDataService.createCategory(userId, category);
+    return await categorySvc.createCategory(userId, category);
   },
 
   async updateCategory(userId: string, category: any) {
-    return await LocalDataService.updateCategory(userId, category);
+    return await categorySvc.updateCategory(userId, category.id, category);
   },
 
   async deleteCategory(userId: string, id: string) {
-    return await LocalDataService.deleteCategory(userId, id);
+    return await categorySvc.deleteCategory(userId, id);
   },
 
-  // BANKS (fallback to local)
+  // BANKS
   async getBanks(userId: string) {
-    return await LocalDataService.getBanks(userId);
+    return await bankSvc.getBanksByUserId(userId);
   },
 
   async saveBank(userId: string, bank: any) {
-    return await LocalDataService.saveBank(userId, bank);
+    if (bank.id) {
+      return await bankSvc.updateBank(userId, bank.id, bank);
+    } else {
+      return await bankSvc.createBank(userId, bank);
+    }
   },
 
   async updateBankBalance(userId: string, bankId: string, newBalance: number) {
-    return await LocalDataService.updateBankBalance(userId, bankId, newBalance);
+    return await bankSvc.updateBank(userId, bankId, { balance: newBalance });
   },
 
   async updateBankBalances(userId: string, updates: {id:string, balance:number}[]) {
-    return await LocalDataService.updateBankBalances(userId, updates);
+    for (const u of updates) {
+      await bankSvc.updateBank(userId, u.id, { balance: u.balance });
+    }
   },
 
   async deleteBank(userId: string, id: string) {
-    return await LocalDataService.deleteBank(userId, id);
+    return await bankSvc.deleteBank(userId, id);
   },
 
-  // INVESTMENTS (fallback to local)
+  // INVESTMENTS
   async getInvestments(userId: string) {
-    return await LocalDataService.getInvestments(userId);
+    return await investmentSvc.getInvestmentsByUserId(userId);
   },
 
   async saveInvestment(userId: string, investment: any) {
-    return await LocalDataService.saveInvestment(userId, investment);
+    if (investment.id) {
+      return await investmentSvc.updateInvestment(userId, investment.id, investment);
+    } else {
+      return await investmentSvc.createInvestment(userId, investment);
+    }
   },
 
   async deleteInvestment(userId: string, id: string) {
-    return await LocalDataService.deleteInvestment(userId, id);
+    return await investmentSvc.deleteInvestment(userId, id);
   },
 
   // USER / CLEANUP

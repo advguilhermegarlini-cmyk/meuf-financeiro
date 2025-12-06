@@ -6,8 +6,11 @@
  * 
  * Estrutura:
  * - users/{uid} → Perfil do usuário
- * - users/{uid}/cards/{cardId} → Cartões do usuário
  * - users/{uid}/transactions/{transactionId} → Transações do usuário
+ * - users/{uid}/cards/{cardId} → Cartões do usuário
+ * - users/{uid}/categories/{categoryId} → Categorias do usuário
+ * - users/{uid}/banks/{bankId} → Bancos/contas do usuário
+ * - users/{uid}/investments/{investmentId} → Investimentos do usuário
  */
 
 rules_version = '2';
@@ -39,14 +42,39 @@ service cloud.firestore {
     // Função auxiliar: valida dados de transação
     function isValidTransactionData() {
       let data = request.resource.data;
-          return data.keys().hasAll(['description', 'amount', 'type', 'date']) &&
-            data.description is string &&
-            data.amount is number &&
-            data.amount > 0 &&
-            // Allow 'transfer' type used by the UI in addition to income/expense
-            data.type in ['income', 'expense', 'transfer'] &&
-            // Accept either a Firestore timestamp or an ISO date string to be permissive
-            (data.date is timestamp || data.date is string);
+      return data.keys().hasAll(['description', 'amount', 'type', 'date']) &&
+             data.description is string &&
+             data.amount is number &&
+             data.amount > 0 &&
+             data.type in ['income', 'expense', 'transfer'] &&
+             (data.date is timestamp || data.date is string);
+    }
+
+    // Função auxiliar: valida dados de categoria
+    function isValidCategoryData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'type']) &&
+             data.name is string &&
+             data.type in ['income', 'expense'];
+    }
+
+    // Função auxiliar: valida dados de banco
+    function isValidBankData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'type', 'balance']) &&
+             data.name is string &&
+             data.type in ['checking', 'savings', 'credit'] &&
+             data.balance is number;
+    }
+
+    // Função auxiliar: valida dados de investimento
+    function isValidInvestmentData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'principal', 'rate', 'frequency']) &&
+             data.name is string &&
+             data.principal is number &&
+             data.rate is number &&
+             data.frequency in ['daily', 'monthly', 'yearly'];
     }
     
     // === COLEÇÃO: users ===
@@ -82,6 +110,63 @@ service cloud.firestore {
         allow update: if request.auth != null && isOwner(uid) && isValidCardData();
         
         // Deleção: usuário pode deletar seus próprios cartões
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: categories ===
+      
+      // Regras para categorias do usuário
+      match /categories/{categoryId} {
+        
+        // Leitura: usuário pode ler suas próprias categorias
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar suas próprias categorias
+        allow create: if request.auth != null && isOwner(uid) && isValidCategoryData();
+        
+        // Atualização: usuário pode atualizar suas próprias categorias
+        allow update: if request.auth != null && isOwner(uid) && isValidCategoryData();
+        
+        // Deleção: usuário pode deletar suas próprias categorias
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: banks ===
+      
+      // Regras para bancos/contas do usuário
+      match /banks/{bankId} {
+        
+        // Leitura: usuário pode ler seus próprios bancos
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar seus próprios bancos
+        allow create: if request.auth != null && isOwner(uid) && isValidBankData();
+        
+        // Atualização: usuário pode atualizar seus próprios bancos
+        allow update: if request.auth != null && isOwner(uid) && isValidBankData();
+        
+        // Deleção: usuário pode deletar seus próprios bancos
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: investments ===
+      
+      // Regras para investimentos do usuário
+      match /investments/{investmentId} {
+        
+        // Leitura: usuário pode ler seus próprios investimentos
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar seus próprios investimentos
+        allow create: if request.auth != null && isOwner(uid) && isValidInvestmentData();
+        
+        // Atualização: usuário pode atualizar seus próprios investimentos
+        allow update: if request.auth != null && isOwner(uid) && isValidInvestmentData();
+        
+        // Deleção: usuário pode deletar seus próprios investimentos
         allow delete: if request.auth != null && isOwner(uid);
       }
       

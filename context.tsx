@@ -4,6 +4,9 @@ import { User, Transaction, Category, Bank, DashboardStats, Investment, InvoiceS
 import { generateId, GITHUB_COLORS } from './utils';
 import { AuthService } from './services/auth';
 import { FirestoreDataService as DataService } from './services/firestoreData';
+import { auth } from './src/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getUserById } from './src/services/users';
 
 export const SYSTEM_CATEGORY_ID = 'system_internal';
 
@@ -71,16 +74,32 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
   useEffect(() => {
     const init = async () => {
         try {
-            const storedUser = localStorage.getItem('mc_user');
             const storedTheme = localStorage.getItem('mc_theme') as 'light' | 'dark';
             
             if (storedTheme) setTheme(storedTheme);
 
-            if (storedUser) {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser);
-                // Data loading happens in the next useEffect dependent on 'user'
-            }
+            // Usa onAuthStateChanged para sincronizar com Firebase Auth
+            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+                if (firebaseUser) {
+                    // Usuário logado: carrega dados do Firestore
+                    const userData = await getUserById(firebaseUser.uid);
+                    const appUser = {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        displayName: firebaseUser.displayName || userData?.displayName || 'Usuário',
+                        ...userData,
+                    };
+                    setUser(appUser);
+                    // Salva no localStorage para referência rápida
+                    localStorage.setItem('mc_user', JSON.stringify(appUser));
+                } else {
+                    // Usuário deslogado
+                    setUser(null);
+                    localStorage.removeItem('mc_user');
+                }
+            });
+
+            return () => unsubscribe();
         } catch (error) {
             console.error("Failed to load session", error);
         }
@@ -151,7 +170,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     const loggedUser = await AuthService.login(email, password);
     setUser(loggedUser);
     localStorage.setItem('mc_user', JSON.stringify(loggedUser));
-    if (loggedUser.theme) setTheme(loggedUser.theme);
+    if ((loggedUser as any).theme) setTheme((loggedUser as any).theme);
   };
 
   const register = async (name: string, email: string, password?: string) => {
@@ -214,6 +233,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const logout = () => {
+    AuthService.logout().catch(err => console.error('Erro ao fazer logout:', err));
     setUser(null);
     localStorage.removeItem('mc_user');
     setTransactions([]);
