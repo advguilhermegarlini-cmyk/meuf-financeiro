@@ -179,11 +179,15 @@ service cloud.firestore {
         // Leitura: usuário pode ler suas próprias transações
         allow read: if request.auth != null && isOwner(uid);
         
-        // Criação: usuário pode criar suas próprias transações
-        allow create: if request.auth != null && isOwner(uid);
+        // Criação: usuário pode criar suas próprias transações COM VALIDAÇÃO
+        allow create: if request.auth != null && 
+                       isOwner(uid) && 
+                       isValidTransactionData();
         
-        // Atualização: usuário pode atualizar suas próprias transações
-        allow update: if request.auth != null && isOwner(uid);
+        // Atualização: usuário pode atualizar suas próprias transações COM VALIDAÇÃO
+        allow update: if request.auth != null && 
+                       isOwner(uid) && 
+                       isValidTransactionData();
         
         // Deleção: usuário pode deletar suas próprias transações
         allow delete: if request.auth != null && isOwner(uid);

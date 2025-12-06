@@ -25,12 +25,37 @@ import { db } from '../firebase';
 import { getServerTimestamp, addMonthsToDate, generateId } from '../helpers';
 
 /**
- * Remove campos undefined do objeto (Firebase não permite undefined)
+ * Remove campos undefined e inválidos do objeto
+ * Firebase não permite undefined, e precisamos validar tipos básicos
  */
 const cleanData = (obj) => {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([_, v]) => v !== undefined)
-  );
+  const cleaned = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    // Pular undefined
+    if (value === undefined) continue;
+    
+    // Validar tipos básicos
+    if (key === 'amount' && typeof value !== 'number') {
+      console.warn(`⚠️ Campo 'amount' deve ser number, recebido: ${typeof value}`);
+      continue;
+    }
+    
+    if (key === 'type' && !['income', 'expense', 'transfer'].includes(value)) {
+      console.warn(`⚠️ Campo 'type' inválido: ${value}`);
+      continue;
+    }
+    
+    if (key === 'description' && (typeof value !== 'string' || value.trim() === '')) {
+      console.warn(`⚠️ Campo 'description' deve ser string não vazia`);
+      continue;
+    }
+    
+    // Se passou nas validações, inclui
+    cleaned[key] = value;
+  }
+  
+  return cleaned;
 };
 
 /**
@@ -48,12 +73,38 @@ export const createTransaction = async (uid, transactionData) => {
     console.log(`🚀 [createTransaction] Iniciando para UID: ${uid}`);
     console.log(`📦 [createTransaction] Dados recebidos:`, transactionData);
     
+    // Validações críticas
+    if (!uid) throw new Error('UID do usuário é obrigatório');
+    if (!transactionData.description) throw new Error('Descrição é obrigatória');
+    if (typeof transactionData.amount !== 'number' || transactionData.amount <= 0) {
+      throw new Error('Valor deve ser um número positivo');
+    }
+    if (!['income', 'expense', 'transfer'].includes(transactionData.type)) {
+      throw new Error(`Tipo inválido: ${transactionData.type}`);
+    }
+    if (!transactionData.date) throw new Error('Data é obrigatória');
+    if (!transactionData.categoryId && transactionData.type !== 'transfer') {
+      throw new Error('Categoria é obrigatória para este tipo');
+    }
+    if (!transactionData.bankId) throw new Error('Banco/conta é obrigatória');
+    
     const txRef = getTransactionsCollection(uid);
     const cleanedData = cleanData(transactionData);
     console.log(`✂️ [createTransaction] Dados após limpar:`, cleanedData);
     
+    // Garantir que date é string ISO ou será convertido
+    let dateToSave = cleanedData.date;
+    if (dateToSave instanceof Date) {
+      dateToSave = dateToSave.toISOString();
+      console.log(`📅 [createTransaction] Convertido Date para ISO: ${dateToSave}`);
+    } else if (typeof dateToSave !== 'string') {
+      dateToSave = new Date(dateToSave).toISOString();
+      console.log(`📅 [createTransaction] Convertido para ISO: ${dateToSave}`);
+    }
+    
     const dataToSave = {
       ...cleanedData,
+      date: dateToSave,
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
     };
@@ -62,10 +113,18 @@ export const createTransaction = async (uid, transactionData) => {
     const docRef = await addDoc(txRef, dataToSave);
     console.log(`✅ [createTransaction] Transação salva com ID: ${docRef.id}`);
     
-    // Retorna com o ID correto do Firestore, não o ID local
-    return { id: docRef.id, ...cleanedData, createdAt: new Date(), updatedAt: new Date() };
+    // Retorna com o ID correto do Firestore
+    return { 
+      id: docRef.id, 
+      ...cleanedData, 
+      date: dateToSave,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    };
   } catch (error) {
-    console.error(`❌ [createTransaction] ERRO:`, error);
+    console.error(`❌ [createTransaction] ERRO CRÍTICO:`, error);
+    console.error(`   Mensagem: ${error.message}`);
+    console.error(`   Stack: ${error.stack}`);
     throw error;
   }
 };
@@ -121,16 +180,37 @@ export const createInstallmentTransaction = async (
 
 /**
  * Obtém todas as transações do usuário
+ * Normaliza os tipos de data para garantir consistência
  */
 export const getTransactionsByUserId = async (uid) => {
   try {
     const txRef = getTransactionsCollection(uid);
     const q = query(txRef, orderBy('date', 'desc'));
     const snapshot = await getDocs(q);
-    const transactions = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    
+    const transactions = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      
+      // Normalizar date: garantir que é sempre string ISO
+      let normalizedDate = data.date;
+      if (data.date && typeof data.date.toDate === 'function') {
+        // É um Firestore Timestamp
+        normalizedDate = data.date.toDate().toISOString();
+      } else if (data.date instanceof Date) {
+        // É um Date object
+        normalizedDate = data.date.toISOString();
+      } else if (typeof data.date !== 'string') {
+        // Tentar converter
+        normalizedDate = new Date(data.date).toISOString();
+      }
+      
+      return {
+        id: doc.id,
+        ...data,
+        date: normalizedDate, // Sempre string ISO
+      };
+    });
+    
     console.log(`📊 Carregadas ${transactions.length} transações para ${uid}`);
     return transactions;
   } catch (error) {

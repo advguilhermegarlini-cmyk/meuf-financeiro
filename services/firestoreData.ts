@@ -7,15 +7,74 @@ import * as bankSvc from '../src/services/banks';
 import * as investmentSvc from '../src/services/investments';
 import { DataService as LocalDataService } from './api';
 
-// Helper: normalize date to JS Date so Firestore stores a Timestamp
-const normalizeDate = (d: any) => {
-  if (!d) return new Date();
-  if (d instanceof Date) return d;
+/**
+ * Normaliza data para ISO String (formato consistente)
+ * Firestore automaticamente converte para Timestamp
+ * @param d - Data em qualquer formato
+ * @returns ISO string da data
+ */
+const normalizeDate = (d: any): string => {
+  if (!d) return new Date().toISOString();
+  
+  // Se já é string ISO, retorna como está
+  if (typeof d === 'string' && d.includes('T')) {
+    return d;
+  }
+  
+  // Se é Date, converte para ISO string
+  if (d instanceof Date) {
+    return d.toISOString();
+  }
+  
+  // Se é Timestamp do Firebase, converte para Date e depois ISO
+  if (d && typeof d.toDate === 'function') {
+    return d.toDate().toISOString();
+  }
+  
+  // Tenta fazer parse como string de data
   try {
     const parsed = new Date(d);
-    if (!isNaN(parsed.getTime())) return parsed;
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
   } catch (e) {}
-  return new Date();
+  
+  // Fallback: hoje
+  return new Date().toISOString();
+};
+
+/**
+ * Valida dados de transação antes de enviar
+ * @param transaction - Dados da transação
+ * @throws Error se dados inválidos
+ */
+const validateTransactionData = (transaction: any): void => {
+  // Campos obrigatórios
+  if (!transaction.description || typeof transaction.description !== 'string' || transaction.description.trim() === '') {
+    throw new Error('Descrição da transação é obrigatória');
+  }
+  
+  if (typeof transaction.amount !== 'number' || transaction.amount <= 0) {
+    throw new Error('Valor deve ser um número positivo');
+  }
+  
+  if (!['income', 'expense', 'transfer'].includes(transaction.type)) {
+    throw new Error('Tipo de transação inválido (deve ser income, expense ou transfer)');
+  }
+  
+  if (!transaction.date) {
+    throw new Error('Data da transação é obrigatória');
+  }
+  
+  // Validar categoria se não é transfer
+  if (transaction.type !== 'transfer' && !transaction.categoryId) {
+    throw new Error('Categoria é obrigatória para este tipo de transação');
+  }
+  
+  // Validar banco
+  if (!transaction.bankId) {
+    throw new Error('Banco/conta é obrigatória');
+  }
 };
 
 export const FirestoreDataService = {
@@ -25,26 +84,56 @@ export const FirestoreDataService = {
   },
 
   async createTransaction(userId: string, transaction: any) {
-    const tx = { ...transaction, date: normalizeDate(transaction.date) };
+    // Validar dados
+    validateTransactionData(transaction);
+    
+    // Normalizar data para string ISO
+    const tx = { 
+      ...transaction, 
+      date: normalizeDate(transaction.date) 
+    };
+    
+    console.log('🔍 [createTransaction] Dados validados e normalizados:', tx);
     const result = await txSvc.createTransaction(userId, tx);
     return result;
   },
 
   async createTransactionsBatch(userId: string, transactions: any[]) {
     const created: any[] = [];
+    
     for (const t of transactions) {
-      const tx = { ...t, date: normalizeDate(t.date) };
-      console.log('📝 Criando transação:', tx);
-      const result = await txSvc.createTransaction(userId, tx);
-      console.log('✅ Transação salva com resultado:', result);
-      created.push(result);
+      try {
+        // Validar dados
+        validateTransactionData(t);
+        
+        const tx = { 
+          ...t, 
+          date: normalizeDate(t.date) 
+        };
+        
+        console.log('📝 Criando transação validada:', tx);
+        const result = await txSvc.createTransaction(userId, tx);
+        console.log('✅ Transação salva com ID:', result.id);
+        created.push(result);
+      } catch (error) {
+        console.error('❌ Erro ao criar transação:', error);
+        throw error;
+      }
     }
+    
     console.log('📦 Total de transações criadas em batch:', created.length);
     return created;
   },
 
   async updateTransaction(userId: string, transaction: any) {
-    const tx = { ...transaction, date: normalizeDate(transaction.date) };
+    // Validar dados
+    validateTransactionData(transaction);
+    
+    const tx = { 
+      ...transaction, 
+      date: normalizeDate(transaction.date) 
+    };
+    
     const updated = await txSvc.updateTransaction(userId, tx.id, tx);
     return updated || tx;
   },
