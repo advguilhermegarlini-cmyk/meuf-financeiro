@@ -42,7 +42,7 @@ export const createTransaction = async (uid, transactionData) => {
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
     });
-    return docRef.id;
+    return { id: docRef.id, ...transactionData };
   } catch (error) {
     console.error('Erro ao criar transação:', error);
     throw error;

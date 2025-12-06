@@ -34,8 +34,8 @@ export const FirestoreDataService = {
     const created: any[] = [];
     for (const t of transactions) {
       const tx = { ...t, date: normalizeDate(t.date) };
-      await txSvc.createTransaction(userId, tx);
-      created.push(tx);
+      const result = await txSvc.createTransaction(userId, tx);
+      created.push(result);
     }
     return created;
   },

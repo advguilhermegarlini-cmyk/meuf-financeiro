@@ -349,13 +349,14 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     }
 
     // --- API CALLS ---
-    await DataService.createTransactionsBatch(user.id, newTxList);
+    const createdTxs = await DataService.createTransactionsBatch(user.id, newTxList);
     if (bankUpdates.length > 0) {
         await DataService.updateBankBalances(user.id, bankUpdates);
     }
 
     // --- STATE UPDATES ---
-    setTransactions(prev => [...newTxList, ...prev]);
+    // Use the transactions returned from Firestore (which have correct IDs)
+    setTransactions(prev => [...createdTxs, ...prev]);
     if (bankUpdates.length > 0) {
         setBanks(prev => prev.map(b => {
             const update = bankUpdates.find(u => u.id === b.id);
