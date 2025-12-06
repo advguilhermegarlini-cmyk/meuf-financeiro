@@ -34,9 +34,12 @@ export const FirestoreDataService = {
     const created: any[] = [];
     for (const t of transactions) {
       const tx = { ...t, date: normalizeDate(t.date) };
+      console.log('📝 Criando transação:', tx);
       const result = await txSvc.createTransaction(userId, tx);
+      console.log('✅ Transação salva com resultado:', result);
       created.push(result);
     }
+    console.log('📦 Total de transações criadas em batch:', created.length);
     return created;
   },
 

@@ -347,7 +347,9 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     }
 
     // --- API CALLS ---
+    console.log('📤 Enviando', newTxList.length, 'transações para o Firestore...');
     const createdTxs = await DataService.createTransactionsBatch(user.id, newTxList);
+    console.log('✅ Transações criadas no Firestore:', createdTxs);
     if (bankUpdates.length > 0) {
         await DataService.updateBankBalances(user.id, bankUpdates);
     }
