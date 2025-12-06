@@ -47,11 +47,15 @@ export const createTransaction = async (uid, transactionData) => {
   try {
     const txRef = getTransactionsCollection(uid);
     const cleanedData = cleanData(transactionData);
-    const docRef = await addDoc(txRef, {
+    console.log('🔵 createTransaction - cleanedData:', cleanedData);
+    const dataToSave = {
       ...cleanedData,
       createdAt: getServerTimestamp(),
       updatedAt: getServerTimestamp(),
-    });
+    };
+    console.log('🔵 createTransaction - dataToSave:', dataToSave);
+    const docRef = await addDoc(txRef, dataToSave);
+    console.log('🔵 createTransaction - saved with ID:', docRef.id);
     return { id: docRef.id, ...transactionData };
   } catch (error) {
     console.error('Erro ao criar transação:', error);
@@ -116,10 +120,12 @@ export const getTransactionsByUserId = async (uid) => {
     const txRef = getTransactionsCollection(uid);
     const q = query(txRef, orderBy('date', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    const transactions = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+    console.log('🟢 getTransactionsByUserId - loaded transactions:', transactions.length, transactions);
+    return transactions;
   } catch (error) {
     console.error('Erro ao obter transações:', error);
     throw error;
@@ -211,19 +217,25 @@ export const updateTransaction = async (uid, transactionId, updates) => {
     
     // Remove o ID do updates (não pode ser atualizado)
     const { id, ...updateFields } = updates;
+    console.log('🟠 updateTransaction - updateFields:', updateFields);
     
     const cleanedUpdates = cleanData({
       ...updateFields,
       updatedAt: getServerTimestamp(),
     });
+    console.log('🟠 updateTransaction - cleanedUpdates:', cleanedUpdates);
     
     await updateDoc(txRef, cleanedUpdates);
+    console.log('🟠 updateTransaction - updated ID:', transactionId);
     
     // Retorna a transação atualizada completa
     const updatedDoc = await getDoc(txRef);
     if (updatedDoc.exists()) {
-      return { id: updatedDoc.id, ...updatedDoc.data() };
+      const result = { id: updatedDoc.id, ...updatedDoc.data() };
+      console.log('🟠 updateTransaction - result from Firestore:', result);
+      return result;
     }
+    console.log('🟠 updateTransaction - doc not found, returning updateFields');
     return { id: transactionId, ...updateFields };
   } catch (error) {
     console.error('Erro ao atualizar transação:', error);
