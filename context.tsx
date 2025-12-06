@@ -138,6 +138,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
                       (DataService as any).getInvestments(user.id)
                   ]);
 
+              console.log(`✅ Contexto carregado: ${txs.length} txs, ${cats.length} cats, ${bks.length} bks, ${invs.length} invs`);
               setTransactions(txs);
               setCategories(cats);
               setBanks(bks);
