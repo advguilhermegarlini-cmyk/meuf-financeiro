@@ -484,6 +484,11 @@ const MainApp = () => {
     setShowTransactionForm('income');
   };
 
+  const handleFabTransferClick = () => {
+    setActiveTab('transactions');
+    setShowTransactionForm('transfer');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
@@ -505,6 +510,7 @@ const MainApp = () => {
       <FloatingActionButton 
         onExpenseClick={handleFabExpenseClick}
         onIncomeClick={handleFabIncomeClick}
+        onTransferClick={handleFabTransferClick}
       />
     </>
   );

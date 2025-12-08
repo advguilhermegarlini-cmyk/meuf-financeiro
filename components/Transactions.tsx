@@ -3,14 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { useApp, SYSTEM_CATEGORY_ID } from '../context';
 import { Card, Button } from './Layout';
 import { formatCurrency, formatDate } from '../utils';
-import { Plus, Filter, Trash2, Search, ArrowRightLeft, CreditCard, Pencil, ChevronLeft, ChevronRight, Repeat, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
+import { Plus, Filter, Trash2, Search, ArrowRightLeft, CreditCard, Pencil, ChevronLeft, ChevronRight, Repeat, AlertTriangle, CheckCircle, Settings, X } from 'lucide-react';
 import { TransactionType, Transaction } from '../types';
 
 export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense' | 'transfer' }) => {
-  const { transactions, categories, banks, addTransaction, deleteTransaction, updateTransaction, payInvoice, getInvoiceStats, getBankBalanceAtDate } = useApp();
+  const { transactions, categories, banks, addTransaction, deleteTransaction, updateTransaction, payInvoice, getInvoiceStats, getBankBalanceAtDate, addCategory, addBank } = useApp();
   const [showForm, setShowForm] = useState(initialTab ? true : false);
   const [showPayInvoice, setShowPayInvoice] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  
+  // Quick Add Modals
+  const [showQuickAddCategory, setShowQuickAddCategory] = useState(false);
+  const [quickCategoryName, setQuickCategoryName] = useState('');
+  const [showQuickAddBank, setShowQuickAddBank] = useState(false);
+  const [quickBankName, setQuickBankName] = useState('');
+  const [quickBankType, setQuickBankType] = useState<'checking' | 'savings' | 'credit'>('checking');
   
   // Date Filtering
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -78,6 +85,37 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
       const [year, month] = e.target.value.split('-');
       const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
       setSelectedDate(newDate);
+    }
+  };
+
+  const handleQuickAddCategory = async () => {
+    if (!quickCategoryName.trim()) return;
+    try {
+      await addCategory(quickCategoryName, tab === 'income' ? 'income' : 'expense');
+      setQuickCategoryName('');
+      setShowQuickAddCategory(false);
+      // Reload categories will happen via context update
+    } catch (error) {
+      console.error('Erro ao criar categoria:', error);
+      alert('Erro ao criar categoria. Tente novamente.');
+    }
+  };
+
+  const handleQuickAddBank = async () => {
+    if (!quickBankName.trim()) return;
+    try {
+      await addBank({
+        name: quickBankName,
+        type: quickBankType,
+        balance: 0
+      });
+      setQuickBankName('');
+      setQuickBankType('checking');
+      setShowQuickAddBank(false);
+      // Reload banks will happen via context update
+    } catch (error) {
+      console.error('Erro ao criar banco:', error);
+      alert('Erro ao criar banco. Tente novamente.');
     }
   };
 
@@ -418,7 +456,16 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
             {tab !== 'transfer' ? (
                 <>
                     <div className="space-y-1">
-                    <label className="text-xs text-github-muted">Categoria ({tab === 'income' ? 'Receita' : 'Despesa'})</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs text-github-muted">Categoria ({tab === 'income' ? 'Receita' : 'Despesa'})</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickAddCategory(true)}
+                        className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Criar
+                      </button>
+                    </div>
                     <select 
                         required
                         className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
@@ -431,7 +478,16 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
                     </div>
 
                     <div className="space-y-1">
-                    <label className="text-xs text-github-muted">Conta / Cartão</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs text-github-muted">Conta / Cartão</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickAddBank(true)}
+                        className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Criar
+                      </button>
+                    </div>
                     <select 
                         required
                         className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
@@ -446,7 +502,16 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
             ) : (
                 <>
                     <div className="space-y-1">
-                    <label className="text-xs text-github-muted">De (Origem)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs text-github-muted">De (Origem)</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickAddBank(true)}
+                        className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Criar
+                      </button>
+                    </div>
                     <select 
                         required
                         className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
@@ -458,7 +523,16 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
                     </select>
                     </div>
                     <div className="space-y-1">
-                    <label className="text-xs text-github-muted">Para (Destino)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs text-github-muted">Para (Destino)</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickAddBank(true)}
+                        className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Criar
+                      </button>
+                    </div>
                     <select 
                         required
                         className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
@@ -674,6 +748,114 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
           </div>
         )}
       </Card>
+
+      {/* Modal Quick Add Category */}
+      {showQuickAddCategory && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
+          <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-github-text">Criar Nova Categoria</h3>
+              <button 
+                onClick={() => setShowQuickAddCategory(false)}
+                className="text-github-muted hover:text-github-text"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleQuickAddCategory(); }} className="space-y-4">
+              <div>
+                <label className="text-xs text-github-muted block mb-2">Nome da Categoria</label>
+                <input
+                  autoFocus
+                  type="text"
+                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+                  placeholder="Ex: Alimentação, Transporte..."
+                  value={quickCategoryName}
+                  onChange={(e) => setQuickCategoryName(e.target.value)}
+                />
+              </div>
+              <div className="bg-github-surface p-3 rounded text-xs text-github-muted">
+                <p className="font-semibold text-github-text mb-1">Tipo:</p>
+                <p>{tab === 'income' ? '💰 Receita' : '💸 Despesa'}</p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  type="button"
+                  onClick={() => setShowQuickAddCategory(false)} 
+                  variant="secondary"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  disabled={!quickCategoryName.trim()}
+                >
+                  Criar
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal Quick Add Bank */}
+      {showQuickAddBank && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
+          <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-github-text">Criar Nova Conta/Cartão</h3>
+              <button 
+                onClick={() => setShowQuickAddBank(false)}
+                className="text-github-muted hover:text-github-text"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleQuickAddBank(); }} className="space-y-4">
+              <div>
+                <label className="text-xs text-github-muted block mb-2">Nome</label>
+                <input
+                  autoFocus
+                  type="text"
+                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+                  placeholder="Ex: Banco do Brasil, Nubank..."
+                  value={quickBankName}
+                  onChange={(e) => setQuickBankName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-github-muted block mb-2">Tipo</label>
+                <select
+                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                  value={quickBankType}
+                  onChange={(e) => setQuickBankType(e.target.value as 'checking' | 'savings' | 'credit')}
+                >
+                  <option value="checking">Conta Corrente</option>
+                  <option value="savings">Conta Poupança</option>
+                  <option value="credit">Cartão de Crédito</option>
+                </select>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  type="button"
+                  onClick={() => setShowQuickAddBank(false)} 
+                  variant="secondary"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  disabled={!quickBankName.trim()}
+                >
+                  Criar
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
