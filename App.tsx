@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context';
 import { Layout, Button } from './components/Layout';
 import { FloatingActionButton } from './components/FloatingActionButton';
+import { QuickTransactionModal } from './components/QuickTransactionModal';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { CreditCardsModule, BanksModule, CategoriesModule, InvestmentsModule } from './components/FinanceModules';
@@ -464,6 +465,7 @@ const MainApp = () => {
   const { user } = useApp();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showTransactionForm, setShowTransactionForm] = useState<'expense' | 'income' | null>(null);
+  const [quickTransactionModal, setQuickTransactionModal] = useState<'expense' | 'income' | 'transfer' | null>(null);
 
   // Reset showTransactionForm quando mudar de aba
   useEffect(() => {
@@ -475,18 +477,15 @@ const MainApp = () => {
   if (!user) return <AuthScreen />;
 
   const handleFabExpenseClick = () => {
-    setActiveTab('transactions');
-    setShowTransactionForm('expense');
+    setQuickTransactionModal('expense');
   };
 
   const handleFabIncomeClick = () => {
-    setActiveTab('transactions');
-    setShowTransactionForm('income');
+    setQuickTransactionModal('income');
   };
 
   const handleFabTransferClick = () => {
-    setActiveTab('transactions');
-    setShowTransactionForm('transfer');
+    setQuickTransactionModal('transfer');
   };
 
   const renderContent = () => {
@@ -511,6 +510,11 @@ const MainApp = () => {
         onExpenseClick={handleFabExpenseClick}
         onIncomeClick={handleFabIncomeClick}
         onTransferClick={handleFabTransferClick}
+      />
+      <QuickTransactionModal 
+        isOpen={quickTransactionModal !== null}
+        onClose={() => setQuickTransactionModal(null)}
+        initialType={quickTransactionModal || 'expense'}
       />
     </>
   );
