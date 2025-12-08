@@ -201,7 +201,7 @@ export const Transactions = () => {
       if (tab === 'income') return c.type === 'income';
       if (tab === 'expense') return c.type === 'expense';
       return true;
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
   return (
     <div className="space-y-6">

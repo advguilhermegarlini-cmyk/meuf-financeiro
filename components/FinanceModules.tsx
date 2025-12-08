@@ -477,7 +477,7 @@ export const CategoriesModule = () => {
         setEditingCatId(null);
     }
 
-    const filteredCats = categories.filter(c => c.type === catType);
+    const filteredCats = categories.filter(c => c.type === catType).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
     return (
         <div className="space-y-6">
