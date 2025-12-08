@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context';
 import { Layout, Button } from './components/Layout';
+import { FloatingActionButton } from './components/FloatingActionButton';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { CreditCardsModule, BanksModule, CategoriesModule, InvestmentsModule } from './components/FinanceModules';
@@ -226,6 +227,14 @@ const ProfileScreen = () => {
     const [oldPass, setOldPass] = useState('');
     const [newPass, setNewPass] = useState('');
     const [confirmPass, setConfirmPass] = useState('');
+
+    // Sincronizar estado quando user mudar
+    useEffect(() => {
+        if (user) {
+            setName(user.displayName || '');
+            setEmail(user.email || '');
+        }
+    }, [user]);
 
     const handleSave = () => {
         updateUserProfile(name, timezone);
@@ -454,13 +463,31 @@ const ProfileScreen = () => {
 const MainApp = () => {
   const { user } = useApp();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showTransactionForm, setShowTransactionForm] = useState<'expense' | 'income' | null>(null);
+
+  // Reset showTransactionForm quando mudar de aba
+  useEffect(() => {
+    if (activeTab !== 'transactions') {
+      setShowTransactionForm(null);
+    }
+  }, [activeTab]);
 
   if (!user) return <AuthScreen />;
+
+  const handleFabExpenseClick = () => {
+    setActiveTab('transactions');
+    setShowTransactionForm('expense');
+  };
+
+  const handleFabIncomeClick = () => {
+    setActiveTab('transactions');
+    setShowTransactionForm('income');
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
-      case 'transactions': return <Transactions />;
+      case 'transactions': return <Transactions initialTab={showTransactionForm || 'expense'} />;
       case 'credit': return <CreditCardsModule />;
       case 'investments': return <InvestmentsModule />;
       case 'banks': return <BanksModule />;
@@ -471,9 +498,15 @@ const MainApp = () => {
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      {renderContent()}
-    </Layout>
+    <>
+      <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+        {renderContent()}
+      </Layout>
+      <FloatingActionButton 
+        onExpenseClick={handleFabExpenseClick}
+        onIncomeClick={handleFabIncomeClick}
+      />
+    </>
   );
 };
 

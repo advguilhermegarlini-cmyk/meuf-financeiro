@@ -6,9 +6,9 @@ import { formatCurrency, formatDate } from '../utils';
 import { Plus, Filter, Trash2, Search, ArrowRightLeft, CreditCard, Pencil, ChevronLeft, ChevronRight, Repeat, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
 import { TransactionType, Transaction } from '../types';
 
-export const Transactions = () => {
+export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense' | 'transfer' }) => {
   const { transactions, categories, banks, addTransaction, deleteTransaction, updateTransaction, payInvoice, getInvoiceStats, getBankBalanceAtDate } = useApp();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(initialTab ? true : false);
   const [showPayInvoice, setShowPayInvoice] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   
@@ -19,7 +19,7 @@ export const Transactions = () => {
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
 
   // Form States
-  const [tab, setTab] = useState<'income'|'expense'|'transfer'>('expense');
+  const [tab, setTab] = useState<'income'|'expense'|'transfer'>(initialTab || 'expense');
   const [editingId, setEditingId] = useState<string|null>(null);
 
   const [formData, setFormData] = useState({
@@ -49,6 +49,7 @@ export const Transactions = () => {
   const [deleteModal, setDeleteModal] = useState<{show: boolean, txId: string, isSeries: boolean}>({show: false, txId: '', isSeries: false});
 
   // Auto-calculate invoice amount when card/date changes in modal
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (showPayInvoice && invoiceForm.cardId) {
         // Use the date selected in the modal, or default to current date
