@@ -1,6 +1,15 @@
 
 export type TransactionType = 'income' | 'expense' | 'investment' | 'transfer';
 
+export interface HealthSettings {
+  // Thresholds for the financial health meter (in currency units)
+  criticalThreshold: number;      // Balance < this = Critical (Red)
+  attentionThreshold: number;     // Balance < this = Attention (Pink)
+  moderateThreshold: number;      // Balance < this = Moderate (Orange)
+  goodThreshold: number;          // Balance < this = Good (Light Green)
+  // Balance >= goodThreshold = Excellent (Dark Green)
+}
+
 export interface User {
   id: string;
   email: string;
@@ -8,6 +17,7 @@ export interface User {
   photoURL?: string;
   currency: string;
   theme: 'dark' | 'light';
+  healthSettings?: HealthSettings; // Custom health meter thresholds
   password?: string;
 }
 

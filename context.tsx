@@ -224,9 +224,9 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
      localStorage.setItem('mc_user', JSON.stringify(newUser));
   }
 
-  const updateUserProfile = async (name: string, timezone: string) => {
+  const updateUserProfile = async (name: string, timezone: string, healthSettings?: any) => {
       if(!user) return;
-      const updated = { ...user, displayName: name };
+      const updated = { ...user, displayName: name, ...(healthSettings && { healthSettings }) };
       // Call API
       const result = await AuthService.updateUser(updated);
       setUser(result);

@@ -1,61 +1,71 @@
-
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { Card } from './Layout';
 import { formatCurrency, getMonthName } from '../utils';
+import { HealthSettings } from '../types';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, 
   ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard, ChevronLeft, ChevronRight, Calendar, Activity } from 'lucide-react';
 
-const FinancialHealthMeter = ({ balance }: { balance: number }) => {
-  // Determine color based on rules
-  let color = '#3fb950'; // Default Green
+// Default health settings
+const DEFAULT_HEALTH_SETTINGS: HealthSettings = {
+  criticalThreshold: -500,
+  attentionThreshold: 0,
+  moderateThreshold: 1000,
+  goodThreshold: 2000,
+};
+
+const FinancialHealthMeter = ({ balance, healthSettings }: { balance: number; healthSettings?: HealthSettings }) => {
+  const settings = healthSettings || DEFAULT_HEALTH_SETTINGS;
+
+  // Determine color based on settings
+  let color = '#006400'; // Default Dark Green (Excellent)
   let label = 'Excelente';
   
-  if (balance < -500) {
-    color = '#FF0000'; // Vermelho Forte
+  if (balance < settings.criticalThreshold) {
+    color = '#FF0000'; // Red
     label = 'Crítico';
-  } else if (balance <= 0) {
-    color = '#FF6F91'; // Rosa Claro
+  } else if (balance < settings.attentionThreshold) {
+    color = '#FF6F91'; // Pink
     label = 'Atenção';
-  } else if (balance <= 1000) {
-    color = '#FFA500'; // Laranja
+  } else if (balance < settings.moderateThreshold) {
+    color = '#FFA500'; // Orange
     label = 'Moderado';
-  } else if (balance <= 2000) {
-    color = '#90EE90'; // Verde Claro
+  } else if (balance < settings.goodThreshold) {
+    color = '#90EE90'; // Light Green
     label = 'Bom';
   } else {
-    color = '#006400'; // Verde Escuro
+    color = '#006400'; // Dark Green
     label = 'Excelente';
   }
 
-  // Calculate Percentage Height based on segmented ranges for better visual representation
+  // Calculate Percentage Height based on segmented ranges
   let percentage = 0;
+  const zoneSize = 20; // Each zone is roughly 20% of the bar
 
-  if (balance < -500) {
-    // Zone 1: < -500 (0% to 15%)
-    percentage = 10; 
-  } else if (balance < 0) {
-    // Zone 2: -500 to 0 (15% to 35%)
-    // Map -500..0 to 0..20 add 15
-    const relative = (balance + 500) / 500;
-    percentage = 15 + (relative * 20);
-  } else if (balance < 1000) {
-    // Zone 3: 0 to 1000 (35% to 60%)
-    const relative = balance / 1000;
-    percentage = 35 + (relative * 25);
-  } else if (balance < 2000) {
-    // Zone 4: 1000 to 2000 (60% to 85%)
-    const relative = (balance - 1000) / 1000;
-    percentage = 60 + (relative * 25);
+  if (balance < settings.criticalThreshold) {
+    percentage = 10;
+  } else if (balance < settings.attentionThreshold) {
+    const range = settings.attentionThreshold - settings.criticalThreshold;
+    const relative = (balance - settings.criticalThreshold) / range;
+    percentage = 10 + (relative * zoneSize);
+  } else if (balance < settings.moderateThreshold) {
+    const range = settings.moderateThreshold - settings.attentionThreshold;
+    const relative = (balance - settings.attentionThreshold) / range;
+    percentage = 30 + (relative * zoneSize);
+  } else if (balance < settings.goodThreshold) {
+    const range = settings.goodThreshold - settings.moderateThreshold;
+    const relative = (balance - settings.moderateThreshold) / range;
+    percentage = 50 + (relative * zoneSize);
   } else {
-    // Zone 5: > 2000 (85% to 100%)
-    // Cap visual growth at 5000 for animation purposes
-    const relative = Math.min((balance - 2000) / 3000, 1);
-    percentage = 85 + (relative * 15);
+    // Excellent: scale to 100%
+    const relative = Math.min((balance - settings.goodThreshold) / (settings.goodThreshold * 2), 1);
+    percentage = 70 + (relative * 30);
   }
+
+  percentage = Math.max(5, Math.min(100, percentage));
 
   return (
     <Card className="p-4 sm:p-6 h-full flex flex-col items-center justify-between relative overflow-hidden">
@@ -68,23 +78,23 @@ const FinancialHealthMeter = ({ balance }: { balance: number }) => {
       </div>
       
       <div className="relative w-20 flex-1 bg-github-border/20 rounded-2xl border border-github-border overflow-hidden flex items-end justify-center shadow-inner">
-        {/* Background Scale Labels */}
+        {/* Background Scale Labels - Dynamic based on settings */}
         <div className="absolute right-0 w-full h-full pointer-events-none z-20">
-            <div className="absolute bottom-[15%] w-full flex items-center">
+            <div className="absolute bottom-[10%] w-full flex items-center">
                 <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">-500</span>
+                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.criticalThreshold)}</span>
             </div>
-            <div className="absolute bottom-[35%] w-full flex items-center">
+            <div className="absolute bottom-[30%] w-full flex items-center">
                 <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">0</span>
+                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.attentionThreshold)}</span>
             </div>
-            <div className="absolute bottom-[60%] w-full flex items-center">
+            <div className="absolute bottom-[50%] w-full flex items-center">
                 <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">1k</span>
+                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.moderateThreshold)}</span>
             </div>
-            <div className="absolute bottom-[85%] w-full flex items-center">
+            <div className="absolute bottom-[70%] w-full flex items-center">
                 <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">2k</span>
+                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.goodThreshold)}</span>
             </div>
         </div>
 
@@ -120,7 +130,7 @@ const FinancialHealthMeter = ({ balance }: { balance: number }) => {
 };
 
 export const Dashboard = () => {
-  const { transactions, getDashboardStats, getOverallBalanceAtDate, categories, theme } = useApp();
+  const { user, transactions, getDashboardStats, getOverallBalanceAtDate, categories, theme } = useApp();
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const stats = getDashboardStats(selectedDate);
@@ -352,7 +362,7 @@ export const Dashboard = () => {
 
         {/* Financial Health Meter (New Component) */}
         <div className="lg:col-span-1 h-80 lg:h-auto">
-            <FinancialHealthMeter balance={stats.balance} />
+            <FinancialHealthMeter balance={stats.balance} healthSettings={user?.healthSettings} />
         </div>
       </div>
 
