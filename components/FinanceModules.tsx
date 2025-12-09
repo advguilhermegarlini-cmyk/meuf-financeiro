@@ -59,36 +59,36 @@ const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
 
     if (isEditing) {
         return (
-            <Card className="p-4 border-github-primary border h-full">
-                <div className="space-y-3">
-                    <h3 className="font-bold text-github-text">Editar Cartão</h3>
-                    <div className="flex gap-2 items-center">
+            <Card className="p-4 sm:p-5 border border-github-border h-full">
+                <div className="space-y-3 sm:space-y-4">
+                    <h3 className="font-bold text-base sm:text-lg text-github-text">Editar Cartão</h3>
+                    <div className="flex gap-2 sm:gap-3 items-center">
                          <input 
                             type="color" 
                             value={editForm.color} 
                             onChange={e => setEditForm({...editForm, color: e.target.value})} 
-                            className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                            className="w-10 h-10 rounded cursor-pointer border-0 p-0 flex-shrink-0"
                          />
-                         <input className="flex-1 bg-github-bg border border-github-border rounded p-2 text-sm text-github-text outline-none" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="Nome" />
+                         <input className="flex-1 bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm text-github-text outline-none" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="Nome" />
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 sm:gap-3">
                         <div className="flex-1">
-                            <label className="text-[10px] text-github-muted">Fechamento</label>
-                            <input type="number" className="w-full bg-github-bg border border-github-border rounded p-2 text-sm text-github-text outline-none" value={editForm.closing} onChange={e => setEditForm({...editForm, closing: parseInt(e.target.value)})} />
+                            <label className="text-xs sm:text-sm text-github-muted block mb-1">Fechamento</label>
+                            <input type="number" className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm text-github-text outline-none" value={editForm.closing} onChange={e => setEditForm({...editForm, closing: parseInt(e.target.value)})} />
                         </div>
                         <div className="flex-1">
-                            <label className="text-[10px] text-github-muted">Vencimento</label>
-                            <input type="number" className="w-full bg-github-bg border border-github-border rounded p-2 text-sm text-github-text outline-none" value={editForm.due} onChange={e => setEditForm({...editForm, due: parseInt(e.target.value)})} />
+                            <label className="text-xs sm:text-sm text-github-muted block mb-1">Vencimento</label>
+                            <input type="number" className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm text-github-text outline-none" value={editForm.due} onChange={e => setEditForm({...editForm, due: parseInt(e.target.value)})} />
                         </div>
                     </div>
                     <div>
-                         <label className="text-[10px] text-github-muted">Limite</label>
-                         <input type="number" className="w-full bg-github-bg border border-github-border rounded p-2 text-sm text-github-text outline-none" value={editForm.limit} onChange={e => setEditForm({...editForm, limit: parseFloat(e.target.value)})} />
+                         <label className="text-xs sm:text-sm text-github-muted block mb-1">Limite</label>
+                         <input type="number" className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm text-github-text outline-none" value={editForm.limit} onChange={e => setEditForm({...editForm, limit: parseFloat(e.target.value)})} />
                     </div>
-                    <div className="flex justify-end gap-2 mt-2">
-                        <Button onClick={() => setIsEditing(false)} variant="secondary" className="text-xs">Cancelar</Button>
-                        <Button onClick={handleUpdate} variant="primary" className="text-xs">Salvar</Button>
+                    <div className="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-6">
+                        <Button onClick={() => setIsEditing(false)} variant="secondary">Cancelar</Button>
+                        <Button onClick={handleUpdate} variant="primary">Salvar</Button>
                     </div>
                 </div>
             </Card>
@@ -96,8 +96,8 @@ const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
     }
 
     return (
-        <Card className="flex flex-col h-[420px]" style={{ borderTop: `4px solid ${card.color || '#333'}` }}>
-            <div className="p-4 border-b border-github-border flex justify-between items-center bg-github-surface/30">
+        <Card className="flex flex-col min-h-[420px] sm:h-[420px]" style={{ borderTop: `4px solid ${card.color || '#333'}` }}>
+            <div className="p-3 sm:p-4 border-b border-github-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 bg-github-surface/30">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: card.color || '#333' }}>
                         <CreditCard size={16} />

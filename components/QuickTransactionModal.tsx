@@ -46,6 +46,9 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
     return true;
   }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
+  const selectedBank = banks.find(b => b.id === formData.bankId);
+  const showInstallments = tab === 'expense' && selectedBank?.type === 'credit';
+
   const handleQuickAddCategory = async () => {
     if (!quickCategoryName.trim()) return;
     try {
@@ -132,9 +135,9 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
-      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
-        <div className="flex justify-between items-center mb-4 sticky top-0 bg-github-bg pb-4 border-b border-github-border">
-          <h3 className="text-lg font-semibold text-github-text">Nova Transação</h3>
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 border border-github-border bg-github-surface shadow-2xl animate-in zoom-in-95">
+        <div className="flex justify-between items-center mb-4 sticky top-0 bg-github-surface pb-3 sm:pb-4 border-b border-github-border">
+          <h3 className="text-base sm:text-lg font-semibold text-github-text">Nova Transação</h3>
           <button 
             onClick={onClose}
             className="text-github-muted hover:text-github-text transition-colors"
@@ -143,27 +146,27 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-3 sm:space-y-4">
           {/* Tabs */}
-          <div className="flex bg-github-bg rounded p-1 border border-github-border w-full">
+          <div className="flex bg-github-bg rounded p-1 border border-github-border w-full gap-1 sm:gap-0">
             <button 
               type="button"
               onClick={() => { setTab('expense'); setFormData(prev => ({...prev, categoryId: ''})); }} 
-              className={`flex-1 px-3 py-1 rounded text-sm ${tab === 'expense' ? 'bg-github-danger text-white' : 'text-github-muted hover:text-github-text'}`}
+              className={`flex-1 px-2 sm:px-3 py-2 sm:py-1 rounded text-xs sm:text-sm transition-colors ${tab === 'expense' ? 'bg-github-danger text-white' : 'text-github-muted hover:text-github-text'}`}
             >
               Despesa
             </button>
             <button 
               type="button"
               onClick={() => { setTab('income'); setFormData(prev => ({...prev, categoryId: ''})); }} 
-              className={`flex-1 px-3 py-1 rounded text-sm ${tab === 'income' ? 'bg-github-success text-white' : 'text-github-muted hover:text-github-text'}`}
+              className={`flex-1 px-2 sm:px-3 py-2 sm:py-1 rounded text-xs sm:text-sm transition-colors ${tab === 'income' ? 'bg-github-success text-white' : 'text-github-muted hover:text-github-text'}`}
             >
               Receita
             </button>
             <button 
               type="button"
               onClick={() => { setTab('transfer'); setFormData(prev => ({...prev, categoryId: ''})); }} 
-              className={`flex-1 px-3 py-1 rounded text-sm ${tab === 'transfer' ? 'bg-github-primary text-white' : 'text-github-muted hover:text-github-text'}`}
+              className={`flex-1 px-2 sm:px-3 py-2 sm:py-1 rounded text-xs sm:text-sm transition-colors ${tab === 'transfer' ? 'bg-github-primary text-white' : 'text-github-muted hover:text-github-text'}`}
             >
               Transferência
             </button>
@@ -171,9 +174,9 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
           {/* Descrição */}
           <div>
-            <label className="text-xs text-github-muted block mb-1">Descrição (Opcional)</label>
+            <label className="text-xs sm:text-sm text-github-muted block mb-1">Descrição (Opcional)</label>
             <input 
-              className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+              className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text focus:border-github-primary outline-none"
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
               placeholder={tab === 'transfer' ? 'Ex: Transferência para Investimento' : 'Vazio = Nome da Categoria'}
@@ -182,10 +185,10 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
           {/* Valor */}
           <div>
-            <label className="text-xs text-github-muted block mb-1">Valor (R$)</label>
+            <label className="text-xs sm:text-sm text-github-muted block mb-1">Valor (R$)</label>
             <input 
               required type="number" step="0.01" min="0.01"
-              className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+              className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text focus:border-github-primary outline-none"
               value={formData.amount}
               onChange={e => setFormData({...formData, amount: e.target.value})}
             />
@@ -195,19 +198,19 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
           {tab !== 'transfer' ? (
             <>
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-github-muted">Categoria ({tab === 'income' ? 'Receita' : 'Despesa'})</label>
+                <div className="flex justify-between items-center mb-1 gap-2">
+                  <label className="text-xs sm:text-sm text-github-muted">Categoria ({tab === 'income' ? 'Receita' : 'Despesa'})</label>
                   <button
                     type="button"
                     onClick={() => setShowQuickAddCategory(true)}
-                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1 flex-shrink-0"
                   >
                     <Plus size={14} /> Criar
                   </button>
                 </div>
                 <select 
                   required
-                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                  className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
                   value={formData.categoryId}
                   onChange={e => setFormData({...formData, categoryId: e.target.value})}
                 >
@@ -217,19 +220,19 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-github-muted">Conta / Cartão</label>
+                <div className="flex justify-between items-center mb-1 gap-2">
+                  <label className="text-xs sm:text-sm text-github-muted">Conta / Cartão</label>
                   <button
                     type="button"
                     onClick={() => setShowQuickAddBank(true)}
-                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1 flex-shrink-0"
                   >
                     <Plus size={14} /> Criar
                   </button>
                 </div>
                 <select 
                   required
-                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                  className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
                   value={formData.bankId}
                   onChange={e => setFormData({...formData, bankId: e.target.value})}
                 >
@@ -237,23 +240,37 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
                   {banks.map(b => <option key={b.id} value={b.id}>{b.name} ({b.type === 'credit' ? 'Crédito' : 'Conta'})</option>)}
                 </select>
               </div>
+              {showInstallments && (
+                <div>
+                  <label className="text-xs sm:text-sm text-github-muted block mb-1">Parcelamento</label>
+                  <select
+                    className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
+                    value={String(formData.installments)}
+                    onChange={e => setFormData({...formData, installments: parseInt(e.target.value || '1', 10)})}
+                  >
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => (
+                      <option key={n} value={n}>{n}x</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </>
           ) : (
             <>
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-github-muted">De (Origem)</label>
+                <div className="flex justify-between items-center mb-1 gap-2">
+                  <label className="text-xs sm:text-sm text-github-muted">De (Origem)</label>
                   <button
                     type="button"
                     onClick={() => setShowQuickAddBank(true)}
-                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1 flex-shrink-0"
                   >
                     <Plus size={14} /> Criar
                   </button>
                 </div>
                 <select 
                   required
-                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                  className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
                   value={formData.bankId}
                   onChange={e => setFormData({...formData, bankId: e.target.value})}
                 >
@@ -263,19 +280,19 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-github-muted">Para (Destino)</label>
+                <div className="flex justify-between items-center mb-1 gap-2">
+                  <label className="text-xs sm:text-sm text-github-muted">Para (Destino)</label>
                   <button
                     type="button"
                     onClick={() => setShowQuickAddBank(true)}
-                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1"
+                    className="text-xs text-github-primary hover:text-github-success transition-colors flex items-center gap-1 flex-shrink-0"
                   >
                     <Plus size={14} /> Criar
                   </button>
                 </div>
                 <select 
                   required
-                  className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                  className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
                   value={formData.toBankId}
                   onChange={e => setFormData({...formData, toBankId: e.target.value})}
                 >
@@ -288,21 +305,21 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
           {/* Data */}
           <div>
-            <label className="text-xs text-github-muted block mb-1">Data</label>
+            <label className="text-xs sm:text-sm text-github-muted block mb-1">Data</label>
             <input 
               type="date" required
-              className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+              className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
               value={formData.date}
               onChange={e => setFormData({...formData, date: e.target.value})}
             />
           </div>
 
           {/* Botões */}
-          <div className="flex gap-2 justify-end border-t border-github-border pt-4 mt-6 sticky bottom-0 bg-github-bg">
-            <Button type="button" onClick={onClose} variant="secondary">
+          <div className="flex gap-2 sm:gap-3 justify-end border-t border-github-border pt-4 mt-6 sticky bottom-0 bg-github-surface">
+            <Button type="button" onClick={onClose} variant="secondary" className="min-w-fit">
               Cancelar
             </Button>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="primary" className="min-w-fit">
               Salvar
             </Button>
           </div>
@@ -311,29 +328,29 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
         {/* Modal Quick Add Category */}
         {showQuickAddCategory && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
-            <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-github-text">Criar Nova Categoria</h3>
+            <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 border border-github-border bg-github-surface shadow-2xl animate-in zoom-in-95">
+              <div className="flex justify-between items-center mb-4 gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-github-text">Criar Nova Categoria</h3>
                 <button 
                   onClick={() => setShowQuickAddCategory(false)}
-                  className="text-github-muted hover:text-github-text"
+                  className="text-github-muted hover:text-github-text flex-shrink-0"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={(e) => { e.preventDefault(); handleQuickAddCategory(); }} className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); handleQuickAddCategory(); }} className="space-y-4 sm:space-y-5">
                 <div>
-                  <label className="text-xs text-github-muted block mb-2">Nome da Categoria</label>
+                  <label className="text-xs sm:text-sm text-github-muted block mb-2">Nome da Categoria</label>
                   <input
                     autoFocus
                     type="text"
-                    className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+                    className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text focus:border-github-primary outline-none"
                     placeholder="Ex: Alimentação, Transporte..."
                     value={quickCategoryName}
                     onChange={(e) => setQuickCategoryName(e.target.value)}
                   />
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 sm:gap-3 justify-end">
                   <Button 
                     type="button"
                     onClick={() => setShowQuickAddCategory(false)} 
@@ -357,32 +374,32 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
         {/* Modal Quick Add Bank */}
         {showQuickAddBank && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
-            <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-github-text">Criar Nova Conta/Cartão</h3>
+            <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 border border-github-border bg-github-surface shadow-2xl animate-in zoom-in-95">
+              <div className="flex justify-between items-center mb-4 gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-github-text">Criar Nova Conta/Cartão</h3>
                 <button 
                   onClick={() => setShowQuickAddBank(false)}
-                  className="text-github-muted hover:text-github-text"
+                  className="text-github-muted hover:text-github-text flex-shrink-0"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={(e) => { e.preventDefault(); handleQuickAddBank(); }} className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); handleQuickAddBank(); }} className="space-y-4 sm:space-y-5">
                 <div>
-                  <label className="text-xs text-github-muted block mb-2">Nome</label>
+                  <label className="text-xs sm:text-sm text-github-muted block mb-2">Nome</label>
                   <input
                     autoFocus
                     type="text"
-                    className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text focus:border-github-primary outline-none"
+                    className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text focus:border-github-primary outline-none"
                     placeholder="Ex: Banco do Brasil, Nubank..."
                     value={quickBankName}
                     onChange={(e) => setQuickBankName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-github-muted block mb-2">Tipo</label>
+                  <label className="text-xs sm:text-sm text-github-muted block mb-2">Tipo</label>
                   <select
-                    className="w-full bg-github-bg border border-github-border rounded p-2 text-github-text outline-none"
+                    className="w-full bg-github-bg border border-github-border rounded-lg p-2 sm:p-3 text-sm sm:text-base text-github-text outline-none"
                     value={quickBankType}
                     onChange={(e) => setQuickBankType(e.target.value as 'checking' | 'savings' | 'credit')}
                   >
@@ -391,7 +408,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
                     <option value="credit">Cartão de Crédito</option>
                   </select>
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 sm:gap-3 justify-end">
                   <Button 
                     type="button"
                     onClick={() => setShowQuickAddBank(false)} 

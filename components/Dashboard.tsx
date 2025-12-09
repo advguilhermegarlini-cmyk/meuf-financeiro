@@ -58,11 +58,11 @@ const FinancialHealthMeter = ({ balance }: { balance: number }) => {
   }
 
   return (
-    <Card className="p-6 h-full flex flex-col items-center justify-between relative overflow-hidden">
-      <div className="flex items-center justify-center w-full z-10 mb-2 gap-2">
-         <Activity size={18} className="text-github-muted" />
-         <div className="flex flex-col items-center">
-           <h3 className="text-lg font-semibold text-github-text">Saúde Financeira</h3>
+    <Card className="p-4 sm:p-6 h-full flex flex-col items-center justify-between relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-center justify-center w-full z-10 mb-3 sm:mb-4 gap-2 sm:gap-3">
+         <Activity size={18} className="text-github-muted flex-shrink-0" />
+         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+           <h3 className="text-base sm:text-lg font-semibold text-github-text">Saúde Financeira</h3>
            <p className="text-xs text-github-muted mt-1">Baseado no mês e saldo previsto</p>
          </div>
       </div>
@@ -225,54 +225,54 @@ export const Dashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 border-l-4 border-l-github-success">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-github-muted">Receitas</p>
-              <h3 className="text-2xl font-bold text-github-text mt-1">{formatCurrency(stats.income)}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-success">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-github-muted">Receitas</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.income)}</h3>
             </div>
-            <div className="p-2 bg-github-success/10 rounded-lg text-github-success">
+            <div className="p-2 bg-github-success/10 rounded-lg text-github-success flex-shrink-0">
               <TrendingUp size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-github-danger">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-github-muted">Despesas</p>
-              <h3 className="text-2xl font-bold text-github-text mt-1">{formatCurrency(stats.expenses)}</h3>
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-danger">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-github-muted">Despesas</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.expenses)}</h3>
             </div>
-            <div className="p-2 bg-github-danger/10 rounded-lg text-github-danger">
+            <div className="p-2 bg-github-danger/10 rounded-lg text-github-danger flex-shrink-0">
               <TrendingDown size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-github-primary">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-github-muted">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-primary">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-github-muted">
                   {isFuture ? 'Saldo Previsto' : 'Saldo (Realizado)'}
               </p>
-              <h3 className={`text-2xl font-bold mt-1 ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
+              <h3 className={`text-xl sm:text-2xl font-bold mt-2 break-words ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
                 {formatCurrency(stats.balance)}
               </h3>
             </div>
-            <div className="p-2 bg-github-primary/10 rounded-lg text-github-primary">
+            <div className="p-2 bg-github-primary/10 rounded-lg text-github-primary flex-shrink-0">
               <DollarSign size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 border-l-4 border-l-github-warning">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-github-muted">Fatura Aberta (Mês)</p>
-              <h3 className="text-2xl font-bold text-github-text mt-1">{formatCurrency(stats.creditCardBill)}</h3>
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-warning">
+          <div className="flex justify-between items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-github-muted">Fatura Aberta (Mês)</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.creditCardBill)}</h3>
             </div>
-            <div className="p-2 bg-github-warning/10 rounded-lg text-github-warning">
+            <div className="p-2 bg-github-warning/10 rounded-lg text-github-warning flex-shrink-0">
               <CreditCard size={20} />
             </div>
           </div>
@@ -280,23 +280,25 @@ export const Dashboard = () => {
       </div>
 
       {/* Charts & Meter */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Cash Flow Chart */}
-        <Card className="p-6 lg:col-span-2">
-          <h3 className="text-lg font-semibold mb-4 text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
+        <Card className="p-4 sm:p-6 lg:col-span-2">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
+          </div>
           <div className="h-64 w-full" style={{ minHeight: 256 }}>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={lineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
-                <XAxis dataKey="name" stroke="#8b949e" tick={{fill: '#8b949e'}} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" stroke="#8b949e" tick={{fill: '#8b949e'}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
-                <YAxis yAxisId="right" orientation="right" stroke="#58a6ff" tick={{fill: '#58a6ff'}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
+                <XAxis dataKey="name" stroke="#8b949e" tick={{fill: '#8b949e', fontSize: 12}} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" stroke="#8b949e" tick={{fill: '#8b949e', fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
+                <YAxis yAxisId="right" orientation="right" stroke="#58a6ff" tick={{fill: '#58a6ff', fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor }}
+                  contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor, borderRadius: '8px' }}
                   itemStyle={{ color: chartTextColor }}
                   formatter={(value: number) => formatCurrency(value)}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar yAxisId="left" dataKey="Receitas" fill="#3fb950" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 <Bar yAxisId="left" dataKey="Despesas" fill="#f85149" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 <Line yAxisId="right" type="monotone" dataKey="SaldoAcumulado" stroke="#58a6ff" strokeWidth={3} dot={{r: 4}} name="Saldo Acumulado" />
@@ -306,8 +308,10 @@ export const Dashboard = () => {
         </Card>
 
         {/* Pie Chart */}
-        <Card className="p-6 lg:col-span-1">
-          <h3 className="text-lg font-semibold mb-4 text-github-text">Gastos por Categoria</h3>
+        <Card className="p-4 sm:p-6 lg:col-span-1">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-github-text">Gastos por Categoria</h3>
+          </div>
           <div className="h-64 w-full flex flex-col items-center justify-center" style={{ minHeight: 256 }}>
             {categoryData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -326,20 +330,20 @@ export const Dashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor }}
+                    contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor, borderRadius: '8px' }}
                     itemStyle={{ color: chartTextColor }}
                     formatter={(value: number) => formatCurrency(value)}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-github-muted text-sm">Sem dados este mês</p>
+              <p className="text-github-muted text-xs sm:text-sm">Sem dados este mês</p>
             )}
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs w-full">
+            <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-2 text-xs w-full">
               {categoryData.slice(0, 4).map((cat, i) => (
-                <div key={i} className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                  <span className="truncate text-github-muted">{cat.name}</span>
+                <div key={i} className="flex items-center space-x-2 min-w-0">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="truncate text-github-muted text-xs">{cat.name}</span>
                 </div>
               ))}
             </div>
@@ -347,15 +351,15 @@ export const Dashboard = () => {
         </Card>
 
         {/* Financial Health Meter (New Component) */}
-        <div className="lg:col-span-1 h-[350px] lg:h-auto">
+        <div className="lg:col-span-1 h-80 lg:h-auto">
             <FinancialHealthMeter balance={stats.balance} />
         </div>
       </div>
 
       {/* Recent Transactions */}
       <Card className="overflow-hidden">
-        <div className="p-4 border-b border-github-border flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-github-text">Movimentações do Mês</h3>
+        <div className="p-4 sm:p-5 border-b border-github-border flex justify-between items-center">
+          <h3 className="text-base sm:text-lg font-semibold text-github-text">Movimentações do Mês</h3>
         </div>
         <div className="divide-y divide-github-border">
           {transactions
@@ -369,26 +373,26 @@ export const Dashboard = () => {
             const isExp = t.type === 'expense';
             const cat = categories.find(c => c.id === t.categoryId);
             return (
-              <div key={t.id} className="p-4 flex items-center justify-between hover:bg-github-bg/50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              <div key={t.id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-github-bg/50 transition-colors gap-3">
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                     t.type === 'transfer' ? 'bg-github-muted/10 text-github-muted' :
                     isExp ? 'bg-github-danger/10 text-github-danger' : 'bg-github-success/10 text-github-success'
                   }`}>
                     {t.type === 'transfer' ? <DollarSign size={18} /> : (isExp ? <TrendingDown size={18} /> : <TrendingUp size={18} />)}
                   </div>
-                  <div>
-                    <p className="font-medium text-github-text">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-github-text text-sm break-words">
                         {t.description}
-                        {t.installments && <span className="ml-2 text-xs text-github-muted">({t.installmentNumber}/{t.installments})</span>}
+                        {t.installments && <span className="ml-1 text-xs text-github-muted">({t.installmentNumber}/{t.installments})</span>}
                     </p>
-                    <p className="text-xs text-github-muted flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: cat?.color || '#ccc' }}></span>
-                      {cat?.name} • {new Date(t.date).toLocaleDateString('pt-BR')}
+                    <p className="text-xs text-github-muted flex items-center gap-2 mt-1">
+                      <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cat?.color || '#ccc' }}></span>
+                      <span className="truncate">{cat?.name} • {new Date(t.date).toLocaleDateString('pt-BR')}</span>
                     </p>
                   </div>
                 </div>
-                <span className={`font-mono font-medium ${
+                <span className={`font-mono font-medium text-sm sm:text-base flex-shrink-0 ${
                     t.type === 'transfer' ? 'text-github-text' :
                     isExp ? 'text-github-danger' : 'text-github-success'
                 }`}>
