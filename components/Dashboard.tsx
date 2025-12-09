@@ -236,53 +236,53 @@ export const Dashboard = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-success">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-success bg-gradient-to-br from-github-surface to-green-500/5 hover:to-green-500/10 transition-all">
           <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted">Receitas</p>
+              <p className="text-xs sm:text-sm text-github-muted font-medium">Receitas</p>
               <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.income)}</h3>
             </div>
-            <div className="p-2 bg-github-success/10 rounded-lg text-github-success flex-shrink-0">
+            <div className="p-2 bg-github-success/10 rounded-xl text-github-success flex-shrink-0 shadow-sm">
               <TrendingUp size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-danger">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-danger bg-gradient-to-br from-github-surface to-red-500/5 hover:to-red-500/10 transition-all">
           <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted">Despesas</p>
+              <p className="text-xs sm:text-sm text-github-muted font-medium">Despesas</p>
               <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.expenses)}</h3>
             </div>
-            <div className="p-2 bg-github-danger/10 rounded-lg text-github-danger flex-shrink-0">
+            <div className="p-2 bg-github-danger/10 rounded-xl text-github-danger flex-shrink-0 shadow-sm">
               <TrendingDown size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-primary">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-primary bg-gradient-to-br from-github-surface to-blue-500/5 hover:to-blue-500/10 transition-all">
           <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted">
+              <p className="text-xs sm:text-sm text-github-muted font-medium">
                   {isFuture ? 'Saldo Previsto' : 'Saldo (Realizado)'}
               </p>
               <h3 className={`text-xl sm:text-2xl font-bold mt-2 break-words ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
                 {formatCurrency(stats.balance)}
               </h3>
             </div>
-            <div className="p-2 bg-github-primary/10 rounded-lg text-github-primary flex-shrink-0">
+            <div className="p-2 bg-github-primary/10 rounded-xl text-github-primary flex-shrink-0 shadow-sm">
               <DollarSign size={20} />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-warning">
+        <Card className="p-4 sm:p-5 border-l-4 border-l-github-warning bg-gradient-to-br from-github-surface to-orange-500/5 hover:to-orange-500/10 transition-all">
           <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted">Fatura Aberta (Mês)</p>
+              <p className="text-xs sm:text-sm text-github-muted font-medium">Fatura Aberta (Mês)</p>
               <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.creditCardBill)}</h3>
             </div>
-            <div className="p-2 bg-github-warning/10 rounded-lg text-github-warning flex-shrink-0">
+            <div className="p-2 bg-github-warning/10 rounded-xl text-github-warning flex-shrink-0 shadow-sm">
               <CreditCard size={20} />
             </div>
           </div>

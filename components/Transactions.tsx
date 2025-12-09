@@ -283,7 +283,7 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
       </div>
 
       {deleteModal.show && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
               <Card className="max-w-md p-6 border-github-danger">
                   <h3 className="text-lg font-bold mb-2 flex items-center gap-2 text-github-danger">
                       <AlertTriangle size={24} /> Excluir Recorrência
@@ -300,7 +300,7 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
 
       {/* Invoice Payment Modal */}
       {showPayInvoice && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in">
           <Card className="w-full max-w-lg p-6 border-github-warning border shadow-2xl relative">
               <button onClick={() => setShowPayInvoice(false)} className="absolute top-4 right-4 text-github-muted hover:text-github-text">
                   <span className="text-xl">&times;</span>
@@ -751,7 +751,7 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
 
       {/* Modal Quick Add Category */}
       {showQuickAddCategory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in">
           <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-github-text">Criar Nova Categoria</h3>
@@ -801,7 +801,7 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
 
       {/* Modal Quick Add Bank */}
       {showQuickAddBank && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in">
           <Card className="w-full max-w-sm p-6 border-github-primary border shadow-2xl animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-github-text">Criar Nova Conta/Cartão</h3>

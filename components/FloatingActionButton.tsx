@@ -87,17 +87,22 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onEx
       )}
 
       {/* Botão Principal Flutuante */}
-      <div className="fixed bottom-8 right-8 z-40">
+      <div className="fixed z-[60] md:bottom-8 md:right-8 bottom-[28px] left-1/2 md:left-auto transform -translate-x-1/2 md:translate-x-0">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center transition-all transform ${
+          className={`w-14 h-14 md:w-16 md:h-16 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex items-center justify-center transition-all duration-300 ${
             isOpen 
-              ? 'bg-github-surface text-github-text scale-110' 
-              : 'bg-github-primary hover:shadow-2xl hover:scale-110 text-white hover:opacity-90'
+              ? 'bg-github-surface text-github-text rotate-45' 
+              : 'bg-gradient-to-tr from-github-primary to-blue-600 text-white hover:scale-110 active:scale-95'
           }`}
           title={isOpen ? "Fechar" : "Nova Transação"}
         >
-          {isOpen ? (
+          <span className="text-3xl font-light leading-none mb-1">+</span>
+        </button>
+      </div>
+    </>
+  );
+};
             <X size={28} />
           ) : (
             <div className="flex items-center justify-center">
