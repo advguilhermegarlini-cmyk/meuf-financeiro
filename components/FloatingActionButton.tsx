@@ -93,7 +93,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onEx
           className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center transition-all transform ${
             isOpen 
               ? 'bg-github-surface text-github-text scale-110' 
-              : 'bg-github-primary hover:bg-blue-600 hover:shadow-2xl hover:scale-110 text-white'
+              : 'bg-github-primary hover:shadow-2xl hover:scale-110 text-white hover:opacity-90'
           }`}
           title={isOpen ? "Fechar" : "Nova Transação"}
         >
