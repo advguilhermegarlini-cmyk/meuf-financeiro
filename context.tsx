@@ -401,6 +401,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
       );
       
       console.log('✅ Transações criadas no Firestore:', createdTxs);
+      console.log(`📊 Transações criadas: ${createdTxs.length}, IDs únicos:`, createdTxs.map(t => t.id).join(', '));
       
       if (bankUpdates.length > 0) {
         await retryWithBackoff(
@@ -412,7 +413,16 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
       // --- STATE UPDATES ---
       // Use the transactions returned from Firestore (which have correct IDs)
-      setTransactions(prev => [...createdTxs, ...prev]);
+      // Avoid duplicates by filtering out any transaction that already exists by ID
+      setTransactions(prev => {
+        const existingIds = new Set(prev.map(t => t.id));
+        const newTransactions = createdTxs.filter(t => !existingIds.has(t.id));
+        console.log(`🔄 Atualizando transações: ${prev.length} existentes + ${newTransactions.length} novas = ${prev.length + newTransactions.length} total`);
+        if (newTransactions.length !== createdTxs.length) {
+          console.warn(`⚠️ AVISO: ${createdTxs.length - newTransactions.length} transações duplicadas foram filtradas!`);
+        }
+        return [...newTransactions, ...prev];
+      });
       if (bankUpdates.length > 0) {
           setBanks(prev => prev.map(b => {
               const update = bankUpdates.find(u => u.id === b.id);

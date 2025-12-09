@@ -13,6 +13,7 @@ interface QuickTransactionModalProps {
 export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ isOpen, onClose, initialType = 'expense' }) => {
   const { transactions, categories, banks, addTransaction, addCategory, addBank } = useApp();
   const [tab, setTab] = useState<'income' | 'expense' | 'transfer'>(initialType);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({
     description: '',
@@ -80,7 +81,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.amount || !formData.bankId) return;
+    if (!formData.amount || !formData.bankId || isSaving) return;
 
     const bank = banks.find(b => b.id === formData.bankId);
     const isCredit = bank?.type === 'credit';
@@ -110,6 +111,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
       installments: isCredit && tab === 'expense' ? formData.installments : 1
     };
 
+    setIsSaving(true);
     try {
       const recurrence = formData.isRecurring ? {
         frequency: formData.frequency,
@@ -128,6 +130,8 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
       alert('Erro ao salvar transação. Tente novamente.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -316,11 +320,11 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
 
           {/* Botões */}
           <div className="flex gap-2 sm:gap-3 justify-end border-t border-github-border pt-4 mt-6 sticky bottom-0 bg-github-surface">
-            <Button type="button" onClick={onClose} variant="secondary" className="min-w-fit">
+            <Button type="button" onClick={onClose} variant="secondary" className="min-w-fit" disabled={isSaving}>
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" className="min-w-fit">
-              Salvar
+            <Button type="submit" variant="primary" className="min-w-fit" disabled={isSaving}>
+              {isSaving ? '⏳ Salvando...' : '💾 Salvar'}
             </Button>
           </div>
         </form>
