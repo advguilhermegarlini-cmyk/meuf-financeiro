@@ -266,48 +266,61 @@ const FinancialHealthMeter = ({ balance, healthSettings }: { balance: number; he
 
   return (
     <Card className="p-4 sm:p-6 h-full flex flex-col items-center justify-between relative overflow-hidden">
+      <style>{`
+        @keyframes waterWave {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
+        }
+        @keyframes waterBubble {
+          0% { transform: translateY(0) scale(1); opacity: 1; }
+          100% { transform: translateY(-100px) scale(0); opacity: 0; }
+        }
+        .water-wave {
+          animation: waterWave 3s ease-in-out infinite;
+        }
+        .water-bubble {
+          animation: waterBubble 2s ease-out infinite;
+        }
+      `}</style>
+      
       <div className="flex flex-col sm:flex-row items-center justify-center w-full z-10 mb-3 sm:mb-4 gap-2 sm:gap-3">
          <Activity size={18} className="text-github-muted flex-shrink-0" />
          <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
            <h3 className="text-base sm:text-lg font-semibold text-github-text">Saúde Financeira</h3>
-           <p className="text-xs text-github-muted mt-1">Baseado no mês e saldo previsto</p>
+           <p className="text-xs text-github-muted mt-1">Baseado no saldo atual</p>
          </div>
       </div>
       
-      <div className="relative w-20 flex-1 bg-github-border/20 rounded-2xl border border-github-border overflow-hidden flex items-end justify-center shadow-inner">
-        {/* Background Scale Labels - Dynamic based on settings */}
-        <div className="absolute right-0 w-full h-full pointer-events-none z-20">
-            <div className="absolute bottom-[10%] w-full flex items-center">
-                <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.criticalThreshold)}</span>
-            </div>
-            <div className="absolute bottom-[30%] w-full flex items-center">
-                <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.attentionThreshold)}</span>
-            </div>
-            <div className="absolute bottom-[50%] w-full flex items-center">
-                <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.moderateThreshold)}</span>
-            </div>
-            <div className="absolute bottom-[70%] w-full flex items-center">
-                <div className="h-[1px] w-2 bg-github-muted/50"></div>
-                <span className="text-[9px] text-github-muted ml-1">{formatCurrency(settings.goodThreshold)}</span>
-            </div>
-        </div>
-
-        {/* Liquid Fill */}
+      <div className="relative w-20 flex-1 bg-github-border/20 rounded-2xl border-2 border-github-border overflow-hidden flex items-end justify-center shadow-inner">
+        {/* Liquid Fill with Wave Animation */}
         <div 
           className="w-full transition-all duration-1000 ease-out relative"
           style={{ 
             height: `${percentage}%`, 
             backgroundColor: color,
-            boxShadow: `0 0 20px ${color}66`
+            boxShadow: `inset 0 0 20px ${color}40`,
           }}
         >
-          {/* Bubble effect overlay */}
-          <div className="absolute top-0 left-0 w-full h-2 bg-white/30" />
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-white/50" />
+          {/* Top wave effect */}
+          <div 
+            className="absolute -top-1 left-0 w-full h-3 water-wave"
+            style={{
+              background: `linear-gradient(90deg, transparent 0%, ${color} 25%, transparent 50%, ${color} 75%, transparent 100%)`,
+              filter: `drop-shadow(0 2px 4px ${color}60)`,
+            }}
+          />
+          
+          {/* Bubbles inside the liquid */}
+          <div className="absolute w-1 h-1 bg-white/40 rounded-full water-bubble" style={{ left: '20%', bottom: '20%' }} />
+          <div className="absolute w-1.5 h-1.5 bg-white/30 rounded-full water-bubble" style={{ left: '60%', bottom: '40%', animationDelay: '0.4s' }} />
+          <div className="absolute w-1 h-1 bg-white/35 rounded-full water-bubble" style={{ left: '40%', bottom: '30%', animationDelay: '0.8s' }} />
+          
+          {/* Shine effect */}
+          <div className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-white/20 to-transparent" />
         </div>
+
+        {/* Empty space above */}
+        <div className="w-full flex-1" />
       </div>
 
       <div className="text-center z-10 mt-4">
