@@ -103,14 +103,3 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onEx
     </>
   );
 };
-            <X size={28} />
-          ) : (
-            <div className="flex items-center justify-center">
-              <div className="text-2xl font-bold">+</div>
-            </div>
-          )}
-        </button>
-      </div>
-    </>
-  );
-};
