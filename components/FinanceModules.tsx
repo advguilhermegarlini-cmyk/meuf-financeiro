@@ -5,12 +5,14 @@ import { Card, Button } from './Layout';
 import { formatCurrency, GITHUB_COLORS } from '../utils';
 import { Wallet, Plus, Trash2, Pencil, Calendar, TrendingUp, PiggyBank, ArrowUpCircle, ArrowDownCircle, ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Clock, Eye, EyeOff, CreditCard, Lock } from 'lucide-react';
 import { Bank, Category, Investment } from '../types';
+import { SubscriptionsComponent } from './Subscriptions';
 
 // --- Credit Card Invoice View ---
 const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
     const { updateBank, deleteBank, getInvoiceStats } = useApp();
     const [viewDate, setViewDate] = useState(new Date());
     const [isEditing, setIsEditing] = useState(false);
+    const [activeTab, setActiveTab] = useState<'invoice' | 'subscriptions'>('invoice');
     const [editForm, setEditForm] = useState({ 
         name: card.name, 
         limit: card.limit || 0, 
@@ -96,7 +98,7 @@ const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
     }
 
     return (
-        <Card className="flex flex-col min-h-[420px] sm:h-[420px]" style={{ borderTop: `4px solid ${card.color || '#333'}` }}>
+        <Card className="flex flex-col min-h-[500px] sm:h-auto" style={{ borderTop: `4px solid ${card.color || '#333'}` }}>
             <div className="p-3 sm:p-4 border-b border-github-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 bg-github-surface/30">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: card.color || '#333' }}>
@@ -116,6 +118,33 @@ const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
                 </div>
             </div>
 
+            {/* Tabs */}
+            <div className="flex gap-2 px-3 sm:px-4 pt-3 border-b border-github-border">
+                <button
+                    onClick={() => setActiveTab('invoice')}
+                    className={`px-3 py-2 text-sm font-medium rounded-t transition-colors ${
+                        activeTab === 'invoice'
+                            ? 'bg-github-bg text-github-text border-b-2 border-github-primary'
+                            : 'text-github-muted hover:text-github-text'
+                    }`}
+                >
+                    Fatura
+                </button>
+                <button
+                    onClick={() => setActiveTab('subscriptions')}
+                    className={`px-3 py-2 text-sm font-medium rounded-t transition-colors ${
+                        activeTab === 'subscriptions'
+                            ? 'bg-github-bg text-github-text border-b-2 border-github-primary'
+                            : 'text-github-muted hover:text-github-text'
+                    }`}
+                >
+                    Assinaturas
+                </button>
+            </div>
+
+            {/* Invoice Tab */}
+            {activeTab === 'invoice' && (
+            <>
             <div className="flex items-center justify-between px-4 py-2 bg-github-bg border-b border-github-border">
                  <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-github-surface rounded text-github-muted hover:text-github-text"><ChevronLeft size={18}/></button>
                  <div className="text-center">
@@ -169,6 +198,15 @@ const InvoiceCard: React.FC<{ card: Bank }> = ({ card }) => {
                     </div>
                 </div>
             </div>
+            </>
+            )}
+
+            {/* Subscriptions Tab */}
+            {activeTab === 'subscriptions' && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <SubscriptionsComponent cardId={card.id} />
+            </div>
+            )}
         </Card>
     );
 };
