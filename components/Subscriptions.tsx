@@ -167,9 +167,12 @@ export const SubscriptionsComponent: React.FC<{ cardId: string }> = ({ cardId })
                 className="w-full mt-1 px-3 py-2 bg-github-bg border border-github-border rounded text-github-fg focus:outline-none focus:border-github-accent"
               >
                 <option value="">Selecione uma categoria</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
+                {categories
+                  .filter(cat => cat.type === 'expense')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
               </select>
             </div>
 

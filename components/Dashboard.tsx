@@ -5,7 +5,8 @@ import { formatCurrency, getMonthName } from '../utils';
 import { HealthSettings } from '../types';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, 
-  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Legend
+  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  AreaChart, Area
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard, ChevronLeft, ChevronRight, Calendar, Activity } from 'lucide-react';
 
@@ -235,128 +236,216 @@ export const Dashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-success bg-gradient-to-br from-github-surface to-green-500/5 hover:to-green-500/10 transition-all">
-          <div className="flex justify-between items-start gap-2 md:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="p-5 md:p-6 border-l-4 border-l-github-success bg-gradient-to-br from-github-surface to-green-500/5 hover:to-green-500/10 transition-all hover:shadow-lg">
+          <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs md:text-sm text-github-muted font-medium">Receitas</p>
-              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.income)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-semibold uppercase tracking-wide">Receitas</p>
+              <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-github-text mt-2 break-words font-mono">{formatCurrency(stats.income)}</h3>
             </div>
-            <div className="p-2 bg-github-success/10 rounded-lg md:rounded-xl text-github-success flex-shrink-0 shadow-sm">
-              <TrendingUp size={18} className="md:w-5 md:h-5" />
+            <div className="p-3 bg-github-success/10 rounded-xl text-github-success flex-shrink-0 shadow-sm">
+              <TrendingUp size={20} className="md:w-6 md:h-6" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-danger bg-gradient-to-br from-github-surface to-red-500/5 hover:to-red-500/10 transition-all">
-          <div className="flex justify-between items-start gap-2 md:gap-3">
+        <Card className="p-5 md:p-6 border-l-4 border-l-github-danger bg-gradient-to-br from-github-surface to-red-500/5 hover:to-red-500/10 transition-all hover:shadow-lg">
+          <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs md:text-sm text-github-muted font-medium">Despesas</p>
-              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.expenses)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-semibold uppercase tracking-wide">Despesas</p>
+              <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-github-text mt-2 break-words font-mono">{formatCurrency(stats.expenses)}</h3>
             </div>
-            <div className="p-2 bg-github-danger/10 rounded-lg md:rounded-xl text-github-danger flex-shrink-0 shadow-sm">
-              <TrendingDown size={18} className="md:w-5 md:h-5" />
+            <div className="p-3 bg-github-danger/10 rounded-xl text-github-danger flex-shrink-0 shadow-sm">
+              <TrendingDown size={20} className="md:w-6 md:h-6" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-primary bg-gradient-to-br from-github-surface to-blue-500/5 hover:to-blue-500/10 transition-all">
-          <div className="flex justify-between items-start gap-2 md:gap-3">
+        <Card className="p-5 md:p-6 border-l-4 border-l-github-primary bg-gradient-to-br from-github-surface to-blue-500/5 hover:to-blue-500/10 transition-all hover:shadow-lg">
+          <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs md:text-sm text-github-muted font-medium">
+              <p className="text-xs md:text-sm text-github-muted font-semibold uppercase tracking-wide">
                   {isFuture ? 'Saldo Previsto' : 'Saldo (Realizado)'}
               </p>
-              <h3 className={`text-lg md:text-2xl font-bold mt-1 md:mt-2 break-words ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
+              <h3 className={`text-xl md:text-2xl lg:text-3xl font-bold mt-2 break-words font-mono ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
                 {formatCurrency(stats.balance)}
               </h3>
             </div>
-            <div className="p-2 bg-github-primary/10 rounded-lg md:rounded-xl text-github-primary flex-shrink-0 shadow-sm">
-              <DollarSign size={18} className="md:w-5 md:h-5" />
+            <div className="p-3 bg-github-primary/10 rounded-xl text-github-primary flex-shrink-0 shadow-sm">
+              <DollarSign size={20} className="md:w-6 md:h-6" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4 sm:p-5 border-l-4 border-l-github-warning bg-gradient-to-br from-github-surface to-orange-500/5 hover:to-orange-500/10 transition-all">
-          <div className="flex justify-between items-start gap-2 md:gap-3">
+        <Card className="p-5 md:p-6 border-l-4 border-l-github-warning bg-gradient-to-br from-github-surface to-orange-500/5 hover:to-orange-500/10 transition-all hover:shadow-lg">
+          <div className="flex justify-between items-start gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs md:text-sm text-github-muted font-medium">Fatura Aberta (Mês)</p>
-              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.creditCardBill)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-semibold uppercase tracking-wide">Fatura Aberta</p>
+              <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-github-text mt-2 break-words font-mono">{formatCurrency(stats.creditCardBill)}</h3>
             </div>
-            <div className="p-2 bg-github-warning/10 rounded-lg md:rounded-xl text-github-warning flex-shrink-0 shadow-sm">
-              <CreditCard size={18} className="md:w-5 md:h-5" />
+            <div className="p-3 bg-github-warning/10 rounded-xl text-github-warning flex-shrink-0 shadow-sm">
+              <CreditCard size={20} className="md:w-6 md:h-6" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Charts & Meter */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-        {/* Cash Flow Chart */}
-        <Card className="p-3 sm:p-4 md:p-6 lg:col-span-2">
-          <div className="mb-2 md:mb-4">
-            <h3 className="text-sm md:text-lg font-semibold text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+        {/* Modern Area Chart - Gráfico de Área */}
+        <Card className="p-4 sm:p-5 md:p-6 lg:col-span-2 relative overflow-hidden">
+          <div className="mb-3 md:mb-4 relative z-10">
+            <h3 className="text-sm md:text-lg font-bold text-github-text">Gráfico de Área</h3>
+            <p className="text-xs text-github-muted mt-1">Evolução dos últimos 6 meses</p>
           </div>
           <div className="h-64 w-full" style={{ minHeight: 256 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={lineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
-                <XAxis dataKey="name" stroke="#8b949e" tick={{fill: '#8b949e', fontSize: 12}} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="left" stroke="#8b949e" tick={{fill: '#8b949e', fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
-                <YAxis yAxisId="right" orientation="right" stroke="#58a6ff" tick={{fill: '#58a6ff', fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor, borderRadius: '8px' }}
-                  itemStyle={{ color: chartTextColor }}
-                  formatter={(value: number) => formatCurrency(value)}
+              <AreaChart data={lineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#d946ef" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} opacity={0.3} vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke={chartTextColor}
+                  tick={{fill: chartTextColor, fontSize: 11, fontWeight: 500}} 
+                  axisLine={false} 
+                  tickLine={false}
+                  dy={10}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
-                <Bar yAxisId="left" dataKey="Receitas" fill="#3fb950" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Bar yAxisId="left" dataKey="Despesas" fill="#f85149" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                <Line yAxisId="right" type="monotone" dataKey="SaldoAcumulado" stroke="#58a6ff" strokeWidth={3} dot={{r: 4}} name="Saldo Acumulado" />
-              </ComposedChart>
+                <YAxis 
+                  stroke={chartTextColor}
+                  tick={{fill: chartTextColor, fontSize: 11}} 
+                  axisLine={false} 
+                  tickLine={false}
+                  tickFormatter={(val) => val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}
+                  width={40}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: tooltipBg, 
+                    borderColor: '#d946ef',
+                    borderWidth: 2,
+                    color: chartTextColor, 
+                    borderRadius: '12px',
+                    padding: '12px',
+                    boxShadow: '0 10px 40px rgba(217, 70, 239, 0.3)'
+                  }}
+                  itemStyle={{ color: chartTextColor, fontWeight: 600 }}
+                  formatter={(value: number) => formatCurrency(value)}
+                  labelStyle={{ fontWeight: 700, marginBottom: '4px' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="SaldoAcumulado" 
+                  stroke="#d946ef" 
+                  strokeWidth={3}
+                  fill="url(#areaGradient)" 
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        {/* Pie Chart */}
-        <Card className="p-4 sm:p-6 lg:col-span-1">
-          <div className="mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-semibold text-github-text">Gastos por Categoria</h3>
+        {/* Modern 3D Pie Chart - Gráfico de Pizza 3D */}
+        <Card className="p-4 sm:p-5 md:p-6 lg:col-span-1 relative overflow-hidden">
+          <div className="mb-3 sm:mb-4 relative z-10">
+            <h3 className="text-base sm:text-lg font-bold text-github-text">3D Pie Charts</h3>
+            <p className="text-xs text-github-muted mt-1">Distribuição de despesas</p>
           </div>
           <div className="h-64 w-full flex flex-col items-center justify-center" style={{ minHeight: 256 }}>
             {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: chartTextColor, borderRadius: '8px' }}
-                    itemStyle={{ color: chartTextColor }}
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-github-muted text-xs sm:text-sm">Sem dados este mês</p>
-            )}
-            <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-2 text-xs w-full">
-              {categoryData.slice(0, 4).map((cat, i) => (
-                <div key={i} className="flex items-center space-x-2 min-w-0">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                  <span className="truncate text-github-muted text-xs">{cat.name}</span>
+              <>
+                <ResponsiveContainer width="100%" height="85%">
+                  <PieChart>
+                    <defs>
+                      {categoryData.map((entry, index) => (
+                        <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={entry.color} stopOpacity={1}/>
+                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="45%"
+                      startAngle={180}
+                      endAngle={-180}
+                      innerRadius={45}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                      animationDuration={1200}
+                      animationBegin={0}
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#gradient-${index})`}
+                          stroke={theme === 'dark' ? '#1c1f26' : '#ffffff'}
+                          strokeWidth={2}
+                          style={{
+                            filter: 'drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25))',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                          }}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: tooltipBg, 
+                        borderColor: tooltipBorder,
+                        borderWidth: 2,
+                        color: chartTextColor, 
+                        borderRadius: '12px',
+                        padding: '10px 14px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+                      }}
+                      itemStyle={{ color: chartTextColor, fontWeight: 600, fontSize: '13px' }}
+                      formatter={(value: number, name: string, props: any) => [
+                        formatCurrency(value),
+                        name
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full px-2">
+                  {categoryData.slice(0, 6).map((cat, i) => {
+                    const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+                    const percentage = ((cat.value / total) * 100).toFixed(0);
+                    return (
+                      <div key={i} className="flex items-center space-x-2 min-w-0 group cursor-pointer">
+                        <div 
+                          className="w-3 h-3 rounded-sm flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform" 
+                          style={{ backgroundColor: cat.color }} 
+                        />
+                        <div className="flex-1 flex items-center justify-between min-w-0">
+                          <span className="truncate text-github-text text-xs font-medium">{cat.name}</span>
+                          <span className="text-[10px] font-bold ml-1" style={{ color: cat.color }}>{percentage}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 rounded-full bg-github-border/20 flex items-center justify-center mb-3">
+                  <DollarSign size={28} className="text-github-muted" />
+                </div>
+                <p className="text-github-muted text-sm font-medium">Sem dados este mês</p>
+                <p className="text-github-muted text-xs mt-1">Adicione transações para visualizar</p>
+              </div>
+            )}
           </div>
         </Card>
 
