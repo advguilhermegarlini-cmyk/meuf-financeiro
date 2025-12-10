@@ -11,6 +11,7 @@
  * - users/{uid}/categories/{categoryId} → Categorias do usuário
  * - users/{uid}/banks/{bankId} → Bancos/contas do usuário
  * - users/{uid}/investments/{investmentId} → Investimentos do usuário
+ * - users/{uid}/subscriptions/{subscriptionId} → Assinaturas do usuário
  */
 
 rules_version = '2';
@@ -190,6 +191,25 @@ service cloud.firestore {
                        isValidTransactionData();
         
         // Deleção: usuário pode deletar suas próprias transações
+        allow delete: if request.auth != null && isOwner(uid);
+      }
+      
+      
+      // === SUBCOLEÇÃO: subscriptions ===
+      
+      // Regras para assinaturas do usuário
+      match /subscriptions/{subscriptionId} {
+        
+        // Leitura: usuário pode ler suas próprias assinaturas
+        allow read: if request.auth != null && isOwner(uid);
+        
+        // Criação: usuário pode criar suas próprias assinaturas
+        allow create: if request.auth != null && isOwner(uid);
+        
+        // Atualização: usuário pode atualizar suas próprias assinaturas
+        allow update: if request.auth != null && isOwner(uid);
+        
+        // Deleção: usuário pode deletar suas próprias assinaturas
         allow delete: if request.auth != null && isOwner(uid);
       }
       
