@@ -324,7 +324,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({ is
               Cancelar
             </Button>
             <Button type="submit" variant="primary" className="min-w-fit" disabled={isSaving}>
-              {isSaving ? '⏳ Salvando...' : '💾 Salvar'}
+              {isSaving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>

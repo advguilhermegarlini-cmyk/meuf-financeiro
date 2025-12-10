@@ -17,7 +17,6 @@ interface HealthLevel {
   color: string;
   bgColor: string;
   borderColor: string;
-  icon: React.ReactNode;
   description: string;
 }
 
@@ -27,7 +26,6 @@ const HEALTH_LEVELS: Record<string, HealthLevel> = {
     color: '#FF0000',
     bgColor: '#FF0000',
     borderColor: '#FF0000',
-    icon: '🔴',
     description: 'Saldo muito negativo - situação crítica',
   },
   attention: {
@@ -35,7 +33,6 @@ const HEALTH_LEVELS: Record<string, HealthLevel> = {
     color: '#FF6F91',
     bgColor: '#FF6F91',
     borderColor: '#FF6F91',
-    icon: '🟠',
     description: 'Saldo negativo - requer atenção',
   },
   moderate: {
@@ -43,7 +40,6 @@ const HEALTH_LEVELS: Record<string, HealthLevel> = {
     color: '#FFA500',
     bgColor: '#FFA500',
     borderColor: '#FFA500',
-    icon: '🟡',
     description: 'Saldo baixo mas positivo',
   },
   good: {
@@ -51,7 +47,6 @@ const HEALTH_LEVELS: Record<string, HealthLevel> = {
     color: '#90EE90',
     bgColor: '#90EE90',
     borderColor: '#90EE90',
-    icon: '🟢',
     description: 'Saldo adequado',
   },
   excellent: {
@@ -59,7 +54,6 @@ const HEALTH_LEVELS: Record<string, HealthLevel> = {
     color: '#006400',
     bgColor: '#006400',
     borderColor: '#006400',
-    icon: '🟢',
     description: 'Saldo muito bom',
   },
 };
@@ -264,11 +258,9 @@ export const FinancialHealthSettings: React.FC = () => {
         <div className="mt-4 p-4 rounded-lg border-2" style={{ borderColor: statusInfo.color }}>
           <div className="flex items-center gap-3">
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center text-3xl flex-shrink-0"
-              style={{ backgroundColor: `${statusInfo.bgColor}33` }}
-            >
-              {statusInfo.icon}
-            </div>
+              className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 border-2"
+              style={{ backgroundColor: `${statusInfo.bgColor}33`, borderColor: statusInfo.color }}
+            />
             <div>
               <p className="font-bold text-lg text-github-text">{statusInfo.label}</p>
               <p className="text-sm text-github-muted">{statusInfo.description}</p>
