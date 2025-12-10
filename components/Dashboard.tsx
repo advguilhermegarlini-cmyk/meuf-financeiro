@@ -10,6 +10,159 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, CreditCard, ChevronLeft, ChevronRight, Calendar, Activity } from 'lucide-react';
 
+// Interactive Pie Chart Component
+interface InteractivePieChartProps {
+  data: Array<{ name: string; value: number; color: string }>;
+}
+
+const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const { theme } = useApp();
+
+  const RADIAN = Math.PI / 180;
+  const renderCustomLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent, index
+  }: any) => {
+    const radius = activeIndex === index ? outerRadius + 35 : innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill={data[index]?.color || '#ffffff'}
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        className="font-bold text-xs sm:text-sm pointer-events-none transition-all duration-300"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  if (data.length === 0) {
+    return (
+      <div className="h-64 w-full flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-github-border/20 flex items-center justify-center mb-3">
+          <DollarSign size={28} className="text-github-muted" />
+        </div>
+        <p className="text-github-muted text-sm font-medium">Sem dados este mês</p>
+        <p className="text-github-muted text-xs mt-1">Adicione transações para visualizar</p>
+      </div>
+    );
+  }
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="h-64 sm:h-72 w-full flex items-center justify-center">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <defs>
+              {data.map((entry, index) => (
+                <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.8} />
+                </linearGradient>
+              ))}
+            </defs>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomLabel}
+              outerRadius={activeIndex !== null ? 95 : 85}
+              innerRadius={55}
+              paddingAngle={2}
+              dataKey="value"
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(null)}
+              animationDuration={300}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={`url(#grad-${index})`}
+                  stroke={theme === 'dark' ? '#1c1f26' : '#ffffff'}
+                  strokeWidth={3}
+                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    filter: activeIndex === index ? 'drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.35))' : 'drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15))',
+                  }}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: theme === 'dark' ? '#0d1117' : '#ffffff',
+                borderColor: theme === 'dark' ? '#30363d' : '#e5e7eb',
+                borderWidth: 2,
+                borderRadius: '12px',
+                padding: '12px 16px',
+                boxShadow: '0 12px 24px rgba(0,0,0,0.2)',
+              }}
+              itemStyle={{ color: '#ffffff', fontWeight: 700, fontSize: '14px' }}
+              formatter={(value: number, name: string, props: any) => {
+                const percent = ((value / total) * 100).toFixed(1);
+                return [`${formatCurrency(value)} (${percent}%)`, name];
+              }}
+              labelStyle={{ color: '#ffffff' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend com detalhes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2">
+        {data.map((item, index) => {
+          const percent = ((item.value / total) * 100).toFixed(1);
+          const isActive = activeIndex === index;
+
+          return (
+            <div
+              key={index}
+              onClick={() => setActiveIndex(isActive ? null : index)}
+              className={`p-2.5 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
+                isActive
+                  ? 'border-current bg-opacity-20'
+                  : 'border-transparent hover:border-github-border bg-github-surface/30 hover:bg-github-surface/50'
+              }`}
+              style={isActive ? { backgroundColor: `${item.color}20`, borderColor: item.color } : {}}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1">
+                  <div
+                    className={`w-4 h-4 rounded-md flex-shrink-0 transition-transform ${
+                      isActive ? 'scale-125' : ''
+                    }`}
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-xs sm:text-sm font-medium text-github-text truncate">
+                    {item.name}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-1.5 ml-6">
+                <span className="text-xs font-bold text-github-muted">
+                  {formatCurrency(item.value)}
+                </span>
+                <span className="text-xs font-bold ml-2" style={{ color: item.color }}>
+                  {percent}%
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // Default health settings
 const DEFAULT_HEALTH_SETTINGS: HealthSettings = {
   criticalThreshold: -500,
@@ -352,101 +505,13 @@ export const Dashboard = () => {
           </div>
         </Card>
 
-        {/* Modern 3D Pie Chart - Gráfico de Pizza 3D */}
+        {/* Modern Interactive 3D Pie Chart - Gráfico de Pizza Interativo */}
         <Card className="p-4 sm:p-5 md:p-6 lg:col-span-1 relative overflow-hidden">
           <div className="mb-3 sm:mb-4 relative z-10">
-            <h3 className="text-base sm:text-lg font-bold text-github-text">3D Pie Charts</h3>
-            <p className="text-xs text-github-muted mt-1">Distribuição de despesas</p>
+            <h3 className="text-base sm:text-lg font-bold text-github-text">Distribuição de Despesas</h3>
+            <p className="text-xs text-github-muted mt-1">Clique nos slices para expandir</p>
           </div>
-          <div className="h-64 w-full flex flex-col items-center justify-center" style={{ minHeight: 256 }}>
-            {categoryData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height="85%">
-                  <PieChart>
-                    <defs>
-                      {categoryData.map((entry, index) => (
-                        <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={entry.color} stopOpacity={1}/>
-                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.7}/>
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="45%"
-                      startAngle={180}
-                      endAngle={-180}
-                      innerRadius={45}
-                      outerRadius={85}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
-                      animationDuration={1200}
-                      animationBegin={0}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#gradient-${index})`}
-                          stroke={theme === 'dark' ? '#1c1f26' : '#ffffff'}
-                          strokeWidth={2}
-                          style={{
-                            filter: 'drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25))',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease'
-                          }}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: tooltipBg, 
-                        borderColor: tooltipBorder,
-                        borderWidth: 2,
-                        color: chartTextColor, 
-                        borderRadius: '12px',
-                        padding: '10px 14px',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
-                      }}
-                      itemStyle={{ color: chartTextColor, fontWeight: 600, fontSize: '13px' }}
-                      formatter={(value: number, name: string, props: any) => [
-                        formatCurrency(value),
-                        name
-                      ]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full px-2">
-                  {categoryData.slice(0, 6).map((cat, i) => {
-                    const total = categoryData.reduce((sum, c) => sum + c.value, 0);
-                    const percentage = ((cat.value / total) * 100).toFixed(0);
-                    return (
-                      <div key={i} className="flex items-center space-x-2 min-w-0 group cursor-pointer">
-                        <div 
-                          className="w-3 h-3 rounded-sm flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform" 
-                          style={{ backgroundColor: cat.color }} 
-                        />
-                        <div className="flex-1 flex items-center justify-between min-w-0">
-                          <span className="truncate text-github-text text-xs font-medium">{cat.name}</span>
-                          <span className="text-[10px] font-bold ml-1" style={{ color: cat.color }}>{percentage}%</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                <div className="w-16 h-16 rounded-full bg-github-border/20 flex items-center justify-center mb-3">
-                  <DollarSign size={28} className="text-github-muted" />
-                </div>
-                <p className="text-github-muted text-sm font-medium">Sem dados este mês</p>
-                <p className="text-github-muted text-xs mt-1">Adicione transações para visualizar</p>
-              </div>
-            )}
-          </div>
+          <InteractivePieChart data={categoryData} />
         </Card>
 
         {/* Financial Health Meter (New Component) */}
