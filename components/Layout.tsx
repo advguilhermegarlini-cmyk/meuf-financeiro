@@ -78,9 +78,14 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-github-border bg-github-bg">
         <div className="p-6 border-b border-github-border flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-github-text">Meu Financeiro</h1>
-            <p className="text-xs text-github-muted mt-1">Sinop, MT • {timeString}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-github-primary/10 border border-github-primary/20 flex items-center justify-center">
+              <span className="text-xl font-bold text-github-primary">$</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-github-text">Meu Financeiro</h1>
+              <p className="text-xs text-github-muted mt-1">Sinop, MT • {timeString}</p>
+            </div>
           </div>
           <button 
              onClick={toggleTheme}
@@ -128,30 +133,26 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
       </aside>
 
       {/* Mobile Header (Simplified) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-github-bg/80 backdrop-blur-md border-b border-github-border z-40 flex items-center justify-between px-4 transition-all">
-        <div className="flex items-center gap-3">
-             <div className="w-9 h-9 rounded-full bg-github-surface border border-github-border flex items-center justify-center overflow-hidden shadow-sm">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-github-text font-bold text-sm">{user?.displayName?.charAt(0).toUpperCase()}</span>
-              )}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-github-bg/80 backdrop-blur-md border-b border-github-border z-40 flex items-center justify-between px-3 transition-all">
+        <div className="flex items-center gap-2">
+             <div className="w-7 h-7 rounded-md bg-github-primary/10 border border-github-primary/20 flex items-center justify-center shadow-sm">
+              <span className="text-base font-bold text-github-primary">$</span>
             </div>
             <div>
-                <p className="text-xs text-github-muted">Olá, {user?.displayName?.split(' ')[0]}</p>
-                <h1 className="text-sm font-bold text-github-text">Meu Financeiro</h1>
+                <p className="text-[10px] text-github-muted leading-none">Olá, {user?.displayName?.split(' ')[0]}</p>
+                <h1 className="text-xs font-bold text-github-text">Meu Financeiro</h1>
             </div>
         </div>
         <button 
             onClick={toggleTheme}
-            className="p-2 rounded-full bg-github-surface border border-github-border text-github-text shadow-sm active:scale-95 transition-all"
+            className="p-1.5 rounded-md hover:bg-github-surface text-github-muted hover:text-github-text transition-colors"
         >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[80px] bg-github-surface border-t border-github-border z-50 flex items-start justify-around px-2 pb-4 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[68px] bg-github-surface border-t border-github-border z-50 flex items-center justify-around px-1 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
         {mobileTabs.map((tab, index) => {
             const isActive = activeTab === tab.id || (tab.id === 'menu' && mobileMenuOpen);
             
@@ -161,10 +162,10 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
                     <button
                         key={tab.id}
                         onClick={() => setMobileMenuOpen(true)}
-                        className={`flex flex-col items-center justify-center w-16 h-full space-y-1 transition-all duration-200 ${isActive ? 'text-github-primary' : 'text-github-muted hover:text-github-text'}`}
+                        className={`flex flex-col items-center justify-center flex-1 h-full space-y-0.5 transition-all duration-200 ${isActive ? 'text-github-primary' : 'text-github-muted hover:text-github-text'}`}
                     >
-                        <tab.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className="text-[10px] font-medium">{tab.label}</span>
+                        <tab.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                        <span className="text-[9px] font-medium">{tab.label}</span>
                     </button>
                 );
             }
@@ -176,10 +177,10 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
                         setActiveTab(tab.id);
                         setMobileMenuOpen(false);
                     }}
-                    className={`flex flex-col items-center justify-center w-16 h-full space-y-1 transition-all duration-200 ${isActive ? 'text-github-primary' : 'text-github-muted hover:text-github-text'}`}
+                    className={`flex flex-col items-center justify-center flex-1 h-full space-y-0.5 transition-all duration-200 ${isActive ? 'text-github-primary' : 'text-github-muted hover:text-github-text'}`}
                 >
-                    <tab.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">{tab.label}</span>
+                    <tab.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                    <span className="text-[9px] font-medium">{tab.label}</span>
                 </button>
             );
         })}
@@ -189,12 +190,12 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[60] flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative bg-github-surface rounded-t-[24px] p-6 animate-in slide-in-from-bottom duration-300 shadow-2xl border-t border-github-border max-h-[80vh] overflow-y-auto">
-            <div className="w-12 h-1.5 bg-github-border rounded-full mx-auto mb-6" />
+          <div className="relative bg-github-surface rounded-t-[24px] p-4 animate-in slide-in-from-bottom duration-300 shadow-2xl border-t border-github-border max-h-[70vh] overflow-y-auto">
+            <div className="w-10 h-1 bg-github-border rounded-full mx-auto mb-4" />
             
-            <h3 className="text-lg font-bold text-github-text mb-4 px-2">Menu Principal</h3>
+            <h3 className="text-base font-bold text-github-text mb-3 px-1">Menu Principal</h3>
             
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-2 mb-4">
                 {[
                     { id: 'investments', label: 'Investir', icon: TrendingUp, color: 'bg-blue-500/10 text-blue-500' },
                     { id: 'banks', label: 'Contas', icon: Wallet, color: 'bg-purple-500/10 text-purple-500' },
@@ -204,22 +205,22 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
                     <button 
                         key={item.id}
                         onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-                        className="flex flex-col items-center gap-2 p-2 rounded-xl active:bg-github-bg transition-colors"
+                        className="flex flex-col items-center gap-1 p-1.5 rounded-lg active:bg-github-bg transition-colors"
                     >
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.color}`}>
-                            <item.icon size={24} />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.color}`}>
+                            <item.icon size={20} />
                         </div>
-                        <span className="text-xs font-medium text-github-text text-center">{item.label}</span>
+                        <span className="text-[9px] font-medium text-github-text text-center">{item.label}</span>
                     </button>
                 ))}
             </div>
 
-            <div className="border-t border-github-border pt-4">
+            <div className="border-t border-github-border pt-3">
                 <button 
                     onClick={logout}
-                    className="w-full flex items-center space-x-3 px-4 py-4 text-github-danger bg-github-danger/5 hover:bg-github-danger/10 rounded-xl transition-colors font-medium"
+                    className="w-full flex items-center space-x-2 px-3 py-3 text-sm text-github-danger bg-github-danger/5 hover:bg-github-danger/10 rounded-lg transition-colors font-medium"
                 >
-                    <LogOut size={20} />
+                    <LogOut size={18} />
                     <span>Sair da Conta</span>
                 </button>
             </div>
@@ -228,7 +229,7 @@ export const Layout = ({ children, activeTab, setActiveTab }: {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto md:p-8 pt-20 pb-24 px-4 scroll-smooth">
+      <main className="flex-1 overflow-y-auto md:p-8 pt-16 pb-20 px-3 md:px-0 scroll-smooth">
         {children}
       </main>
     </div>

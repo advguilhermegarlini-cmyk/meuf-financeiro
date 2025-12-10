@@ -206,19 +206,19 @@ export const Dashboard = () => {
   const lineData = getCashFlowData();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header with Navigation */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-github-text">Visão Geral</h2>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4">
+        <h2 className="text-xl md:text-2xl font-bold text-github-text">Visão Geral</h2>
         
         <div className="flex items-center bg-github-surface border border-github-border rounded-lg p-1">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
-            <ChevronLeft size={20} />
+          <button onClick={() => changeMonth(-1)} className="p-1.5 md:p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
+            <ChevronLeft size={18} />
           </button>
           
-          <div className="relative px-4 text-center group cursor-pointer">
-             <span className="text-lg font-medium capitalize block w-32 text-github-text">
-                {selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          <div className="relative px-2 md:px-4 text-center group cursor-pointer">
+             <span className="text-sm md:text-lg font-medium capitalize block text-github-text">
+                {selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
              </span>
              {/* Hidden Date Input overlay for picker functionality */}
              <input 
@@ -228,73 +228,73 @@ export const Dashboard = () => {
              />
           </div>
 
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
-            <ChevronRight size={20} />
+          <button onClick={() => changeMonth(1)} className="p-1.5 md:p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
         <Card className="p-4 sm:p-5 border-l-4 border-l-github-success bg-gradient-to-br from-github-surface to-green-500/5 hover:to-green-500/10 transition-all">
-          <div className="flex justify-between items-start gap-3">
+          <div className="flex justify-between items-start gap-2 md:gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted font-medium">Receitas</p>
-              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.income)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-medium">Receitas</p>
+              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.income)}</h3>
             </div>
-            <div className="p-2 bg-github-success/10 rounded-xl text-github-success flex-shrink-0 shadow-sm">
-              <TrendingUp size={20} />
+            <div className="p-2 bg-github-success/10 rounded-lg md:rounded-xl text-github-success flex-shrink-0 shadow-sm">
+              <TrendingUp size={18} className="md:w-5 md:h-5" />
             </div>
           </div>
         </Card>
 
         <Card className="p-4 sm:p-5 border-l-4 border-l-github-danger bg-gradient-to-br from-github-surface to-red-500/5 hover:to-red-500/10 transition-all">
-          <div className="flex justify-between items-start gap-3">
+          <div className="flex justify-between items-start gap-2 md:gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted font-medium">Despesas</p>
-              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.expenses)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-medium">Despesas</p>
+              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.expenses)}</h3>
             </div>
-            <div className="p-2 bg-github-danger/10 rounded-xl text-github-danger flex-shrink-0 shadow-sm">
-              <TrendingDown size={20} />
+            <div className="p-2 bg-github-danger/10 rounded-lg md:rounded-xl text-github-danger flex-shrink-0 shadow-sm">
+              <TrendingDown size={18} className="md:w-5 md:h-5" />
             </div>
           </div>
         </Card>
 
         <Card className="p-4 sm:p-5 border-l-4 border-l-github-primary bg-gradient-to-br from-github-surface to-blue-500/5 hover:to-blue-500/10 transition-all">
-          <div className="flex justify-between items-start gap-3">
+          <div className="flex justify-between items-start gap-2 md:gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted font-medium">
+              <p className="text-xs md:text-sm text-github-muted font-medium">
                   {isFuture ? 'Saldo Previsto' : 'Saldo (Realizado)'}
               </p>
-              <h3 className={`text-xl sm:text-2xl font-bold mt-2 break-words ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
+              <h3 className={`text-lg md:text-2xl font-bold mt-1 md:mt-2 break-words ${stats.balance >= 0 ? 'text-github-primary' : 'text-github-danger'}`}>
                 {formatCurrency(stats.balance)}
               </h3>
             </div>
-            <div className="p-2 bg-github-primary/10 rounded-xl text-github-primary flex-shrink-0 shadow-sm">
-              <DollarSign size={20} />
+            <div className="p-2 bg-github-primary/10 rounded-lg md:rounded-xl text-github-primary flex-shrink-0 shadow-sm">
+              <DollarSign size={18} className="md:w-5 md:h-5" />
             </div>
           </div>
         </Card>
 
         <Card className="p-4 sm:p-5 border-l-4 border-l-github-warning bg-gradient-to-br from-github-surface to-orange-500/5 hover:to-orange-500/10 transition-all">
-          <div className="flex justify-between items-start gap-3">
+          <div className="flex justify-between items-start gap-2 md:gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm text-github-muted font-medium">Fatura Aberta (Mês)</p>
-              <h3 className="text-xl sm:text-2xl font-bold text-github-text mt-2 break-words">{formatCurrency(stats.creditCardBill)}</h3>
+              <p className="text-xs md:text-sm text-github-muted font-medium">Fatura Aberta (Mês)</p>
+              <h3 className="text-lg md:text-2xl font-bold text-github-text mt-1 md:mt-2 break-words">{formatCurrency(stats.creditCardBill)}</h3>
             </div>
-            <div className="p-2 bg-github-warning/10 rounded-xl text-github-warning flex-shrink-0 shadow-sm">
-              <CreditCard size={20} />
+            <div className="p-2 bg-github-warning/10 rounded-lg md:rounded-xl text-github-warning flex-shrink-0 shadow-sm">
+              <CreditCard size={18} className="md:w-5 md:h-5" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Charts & Meter */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
         {/* Cash Flow Chart */}
-        <Card className="p-4 sm:p-6 lg:col-span-2">
-          <div className="mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-semibold text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
+        <Card className="p-3 sm:p-4 md:p-6 lg:col-span-2">
+          <div className="mb-2 md:mb-4">
+            <h3 className="text-sm md:text-lg font-semibold text-github-text">Fluxo de Caixa (Previsão 6 Meses)</h3>
           </div>
           <div className="h-64 w-full" style={{ minHeight: 256 }}>
             <ResponsiveContainer width="100%" height="100%">

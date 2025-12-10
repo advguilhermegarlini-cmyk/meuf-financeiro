@@ -8,7 +8,7 @@ import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { CreditCardsModule, BanksModule, CategoriesModule, InvestmentsModule } from './components/FinanceModules';
 import { FinancialHealthSettings } from './components/FinancialHealthSettings';
-import { ShieldCheck, User as UserIcon, AlertTriangle, Camera, Lock, ArrowLeft, Key, Trash2, Activity } from 'lucide-react';
+import { ShieldCheck, User as UserIcon, AlertTriangle, Camera, Lock, ArrowLeft, Key, Trash2, Activity, Download } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children?: React.ReactNode;
@@ -216,7 +216,7 @@ const AuthScreen = () => {
 };
 
 const ProfileScreen = () => {
-    const { user, updateUserProfile, uploadAvatar, changePassword, deleteAccount } = useApp();
+    const { user, updateUserProfile, uploadAvatar, changePassword, deleteAccount, transactions, categories, banks, investments } = useApp();
     const [name, setName] = useState(user?.displayName || '');
     const [email, setEmail] = useState(user?.email || '');
     const [timezone, setTimezone] = useState('America/Cuiaba');
@@ -314,6 +314,46 @@ const ProfileScreen = () => {
         }
     }
 
+    const handleExportData = async () => {
+        try {
+            const exportData = {
+                usuario: {
+                    nome: user?.displayName,
+                    email: user?.email,
+                    dataExportacao: new Date().toLocaleString('pt-BR'),
+                },
+                transacoes: transactions,
+                categorias: categories,
+                bancos: banks,
+                investimentos: investments,
+                resumo: {
+                    totalTransacoes: transactions.length,
+                    totalCategorias: categories.length,
+                    totalBancos: banks.length,
+                    totalInvestimentos: investments.length,
+                }
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `meu-financeiro-exportacao-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            setMsg('Dados exportados com sucesso!');
+            setMsgType('success');
+            setTimeout(() => setMsg(''), 3000);
+        } catch (err: any) {
+            setMsg('Erro ao exportar dados.');
+            setMsgType('error');
+        }
+    }
+
     return (
         <div className="max-w-4xl mx-auto animate-in fade-in pb-10">
             {/* Header com Avatar */}
@@ -356,149 +396,168 @@ const ProfileScreen = () => {
                 </div>
             )}
 
-            {/* Grid de Seções */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                {/* Coluna 1: Perfil */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Card: Informações Pessoais */}
-                    <div className="bg-github-surface border border-github-border rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <UserIcon size={22} className="text-github-primary flex-shrink-0" />
-                            <h3 className="text-lg font-bold text-github-text">Informações Pessoais</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-github-text mb-2">Nome de Exibição</label>
-                                <input 
-                                    value={name} 
-                                    onChange={e => setName(e.target.value)} 
-                                    className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
-                                    placeholder="Seu nome"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-github-text mb-2">Email</label>
-                                <input 
-                                    disabled 
-                                    value={email} 
-                                    className="w-full bg-github-border/20 border border-github-border rounded-lg p-3 text-github-muted cursor-not-allowed opacity-60" 
-                                />
-                                <p className="text-xs text-github-muted mt-1">Email não pode ser alterado</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-github-text mb-2">Fuso Horário</label>
-                                <select 
-                                    value={timezone} 
-                                    onChange={e => setTimezone(e.target.value)} 
-                                    className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all"
-                                >
-                                    <option value="America/Cuiaba">🏠 Sinop, MT (America/Cuiaba) -04:00</option>
-                                    <option value="America/Sao_Paulo">🏛️ Brasília (America/Sao_Paulo) -03:00</option>
-                                    <option value="America/Manaus">🌳 Manaus, AM (America/Manaus) -04:00</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-end pt-2">
-                                <Button onClick={handleSave} variant="primary">💾 Salvar Alterações</Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card: Segurança - Alterar Senha */}
-                    <div className="bg-github-surface border border-github-border rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <Key size={22} className="text-github-primary flex-shrink-0" />
-                            <h3 className="text-lg font-bold text-github-text">Segurança</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <p className="text-sm text-github-muted">Altere sua senha regularmente para manter sua conta segura.</p>
-                            <div>
-                                <label className="block text-sm font-medium text-github-text mb-2">Senha Atual</label>
-                                <input 
-                                    type="password"
-                                    value={oldPass} 
-                                    onChange={e => setOldPass(e.target.value)} 
-                                    className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-github-text mb-2">Nova Senha</label>
-                                    <input 
-                                        type="password"
-                                        value={newPass} 
-                                        onChange={e => setNewPass(e.target.value)} 
-                                        className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-github-text mb-2">Confirmar Senha</label>
-                                    <input 
-                                        type="password"
-                                        value={confirmPass} 
-                                        onChange={e => setConfirmPass(e.target.value)} 
-                                        className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end pt-2">
-                                <Button onClick={handleChangePassword} variant="secondary">🔐 Atualizar Senha</Button>
-                            </div>
-                        </div>
-                    </div>
+            {/* 1. Informações Pessoais */}
+            <div className="bg-github-surface border border-github-border rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <UserIcon size={22} className="text-github-primary flex-shrink-0" />
+                    <h3 className="text-lg font-bold text-github-text">Informações Pessoais</h3>
                 </div>
-
-                {/* Coluna 2: Zona de Perigo */}
-                <div className="space-y-6">
-                    <div className="bg-github-danger/5 border-2 border-github-danger/30 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-5">
-                            <AlertTriangle size={22} className="text-github-danger flex-shrink-0" />
-                            <h3 className="text-lg font-bold text-github-danger">Zona de Perigo</h3>
-                        </div>
-                        {!showDeleteConfirm ? (
-                            <div className="space-y-4">
-                                <p className="text-sm text-github-muted">Esta ação é <strong>irreversível</strong>. Todos os seus dados serão permanentemente deletados.</p>
-                                <Button onClick={() => setShowDeleteConfirm(true)} variant="danger" className="w-full">🗑️ Excluir Conta</Button>
-                            </div>
-                        ) : (
-                            <div className="space-y-4 bg-github-danger/20 p-4 rounded-lg border border-github-danger">
-                                <div className="flex items-start gap-2">
-                                    <AlertTriangle size={18} className="text-github-danger flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="font-bold text-github-danger text-sm">Última chance!</p>
-                                        <p className="text-xs text-github-muted mt-1">Você está prestes a deletar sua conta permanentemente. Digite sua senha para confirmar.</p>
-                                    </div>
-                                </div>
-                                <input 
-                                    type="password"
-                                    value={deletePassword} 
-                                    onChange={e => setDeletePassword(e.target.value)} 
-                                    placeholder="Sua senha"
-                                    className="w-full bg-github-bg border border-github-danger/50 rounded-lg p-3 text-github-text outline-none focus:border-github-danger focus:ring-1 focus:ring-github-danger/30 transition-all" 
-                                />
-                                <div className="flex gap-2">
-                                    <Button 
-                                        onClick={() => {
-                                            setShowDeleteConfirm(false);
-                                            setDeletePassword('');
-                                        }} 
-                                        variant="secondary"
-                                        className="flex-1"
-                                    >
-                                        Cancelar
-                                    </Button>
-                                    <Button onClick={handleDeleteAccount} variant="danger" className="flex-1">Confirmar</Button>
-                                </div>
-                            </div>
-                        )}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-github-text mb-2">Nome de Exibição</label>
+                        <input 
+                            value={name} 
+                            onChange={e => setName(e.target.value)} 
+                            className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
+                            placeholder="Seu nome"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-github-text mb-2">Email</label>
+                        <input 
+                            disabled 
+                            value={email} 
+                            className="w-full bg-github-border/20 border border-github-border rounded-lg p-3 text-github-muted cursor-not-allowed opacity-60" 
+                        />
+                        <p className="text-xs text-github-muted mt-1">Email não pode ser alterado</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-github-text mb-2">Fuso Horário</label>
+                        <select 
+                            value={timezone} 
+                            onChange={e => setTimezone(e.target.value)} 
+                            className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all"
+                        >
+                            <option value="America/Cuiaba">🏠 Sinop, MT (America/Cuiaba) -04:00</option>
+                            <option value="America/Sao_Paulo">🏛️ Brasília (America/Sao_Paulo) -03:00</option>
+                            <option value="America/Manaus">🌳 Manaus, AM (America/Manaus) -04:00</option>
+                        </select>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                        <Button onClick={handleSave} variant="primary">Salvar Alterações</Button>
                     </div>
                 </div>
             </div>
 
-            {/* Financial Health Settings Section - Full Width */}
+            {/* 2. Saúde Financeira (Full Width) */}
             <FinancialHealthSettings />
+
+            {/* 3. Exportar Dados */}
+            <div className="bg-github-surface border border-github-border rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <Download size={22} className="text-github-primary flex-shrink-0" />
+                    <h3 className="text-lg font-bold text-github-text">Exportar Dados</h3>
+                </div>
+                <div className="space-y-4">
+                    <p className="text-sm text-github-muted">
+                        Exporte todos os seus dados financeiros em formato JSON. Este arquivo pode ser compartilhado com seu contador ou utilizado para backup pessoal. O arquivo incluirá todas as suas transações, categorias, contas, investimentos e um resumo dos dados.
+                    </p>
+                    <div className="bg-github-bg/50 border border-github-border rounded-lg p-4 space-y-2">
+                        <p className="text-xs text-github-muted font-medium">O arquivo exportado contém:</p>
+                        <ul className="text-xs text-github-muted space-y-1 list-disc list-inside">
+                            <li>Informações do usuário e data de exportação</li>
+                            <li>Todas as transações registradas</li>
+                            <li>Categorias e bancos configurados</li>
+                            <li>Investimentos</li>
+                            <li>Resumo geral dos dados</li>
+                        </ul>
+                    </div>
+                    <Button onClick={handleExportData} variant="primary" className="w-full flex items-center justify-center gap-2">
+                        <Download size={18} />
+                        Exportar Dados para JSON
+                    </Button>
+                </div>
+            </div>
+
+            {/* 4. Segurança - Alterar Senha (Penúltimo) */}
+            <div className="bg-github-surface border border-github-border rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <Key size={22} className="text-github-primary flex-shrink-0" />
+                    <h3 className="text-lg font-bold text-github-text">Trocar Senha</h3>
+                </div>
+                <div className="space-y-4">
+                    <p className="text-sm text-github-muted">Altere sua senha regularmente para manter sua conta segura.</p>
+                    <div>
+                        <label className="block text-sm font-medium text-github-text mb-2">Senha Atual</label>
+                        <input 
+                            type="password"
+                            value={oldPass} 
+                            onChange={e => setOldPass(e.target.value)} 
+                            className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-github-text mb-2">Nova Senha</label>
+                            <input 
+                                type="password"
+                                value={newPass} 
+                                onChange={e => setNewPass(e.target.value)} 
+                                className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-github-text mb-2">Confirmar Senha</label>
+                            <input 
+                                type="password"
+                                value={confirmPass} 
+                                onChange={e => setConfirmPass(e.target.value)} 
+                                className="w-full bg-github-bg border border-github-border rounded-lg p-3 text-github-text outline-none focus:border-github-primary focus:ring-1 focus:ring-github-primary/30 transition-all" 
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                        <Button onClick={handleChangePassword} variant="secondary">Atualizar Senha</Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* 5. Zona de Perigo - Excluir Conta (Último) */}
+            <div className="bg-github-danger/5 border-2 border-github-danger/30 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-5">
+                    <AlertTriangle size={22} className="text-github-danger flex-shrink-0" />
+                    <h3 className="text-lg font-bold text-github-danger">Zona de Perigo</h3>
+                </div>
+                {!showDeleteConfirm ? (
+                    <div className="space-y-4">
+                        <p className="text-sm text-github-muted">Esta ação é <strong>irreversível</strong>. Todos os seus dados serão permanentemente deletados.</p>
+                        <Button onClick={() => setShowDeleteConfirm(true)} variant="danger" className="w-full">Excluir Conta</Button>
+                    </div>
+                ) : (
+                    <div className="space-y-4 bg-github-danger/20 p-4 rounded-lg border border-github-danger">
+                        <div className="flex items-start gap-2">
+                            <AlertTriangle size={18} className="text-github-danger flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-bold text-github-danger text-sm">Última chance!</p>
+                                <p className="text-xs text-github-muted mt-1">Você está prestes a deletar sua conta permanentemente. Digite sua senha para confirmar.</p>
+                            </div>
+                        </div>
+                        <input 
+                            type="password"
+                            value={deletePassword} 
+                            onChange={e => setDeletePassword(e.target.value)} 
+                            placeholder="Sua senha"
+                            className="w-full bg-github-bg border border-github-danger/50 rounded-lg p-3 text-github-text outline-none focus:border-github-danger focus:ring-1 focus:ring-github-danger/30 transition-all" 
+                        />
+                        <div className="flex gap-2">
+                            <Button 
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setDeletePassword('');
+                                }} 
+                                variant="secondary"
+                                className="flex-1"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleDeleteAccount} variant="danger" className="flex-1">Confirmar</Button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

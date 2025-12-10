@@ -8,7 +8,7 @@ import { TransactionType, Transaction } from '../types';
 
 export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense' | 'transfer' }) => {
   const { transactions, categories, banks, addTransaction, deleteTransaction, updateTransaction, payInvoice, getInvoiceStats, getBankBalanceAtDate, addCategory, addBank } = useApp();
-  const [showForm, setShowForm] = useState(initialTab ? true : false);
+  const [showForm, setShowForm] = useState(false);
   const [showPayInvoice, setShowPayInvoice] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   
@@ -243,19 +243,19 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
   }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h2 className="text-2xl font-bold text-github-text">Transações</h2>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
+        <h2 className="text-xl md:text-2xl font-bold text-github-text">Transações</h2>
         
         {/* Date Selector */}
         <div className="flex items-center bg-github-surface border border-github-border rounded-lg p-1 order-2 md:order-none">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
-            <ChevronLeft size={20} />
+          <button onClick={() => changeMonth(-1)} className="p-1.5 md:p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
+            <ChevronLeft size={18} />
           </button>
           
-          <div className="relative px-4 text-center group cursor-pointer">
-             <span className="text-sm font-medium capitalize block w-32 text-github-text">
-                {selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          <div className="relative px-2 md:px-4 text-center group cursor-pointer">
+             <span className="text-xs md:text-sm font-medium capitalize block text-github-text">
+                {selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}
              </span>
              <input 
                type="month" 
@@ -265,19 +265,21 @@ export const Transactions = ({ initialTab }: { initialTab?: 'income' | 'expense'
              />
           </div>
 
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
-            <ChevronRight size={20} />
+          <button onClick={() => changeMonth(1)} className="p-1.5 md:p-2 hover:bg-github-border rounded-md text-github-muted hover:text-github-text transition-colors">
+            <ChevronRight size={18} />
           </button>
         </div>
 
         <div className="flex gap-2 order-3 md:order-none">
-            <Button onClick={() => setShowPayInvoice(!showPayInvoice)} variant="secondary" className="flex items-center space-x-2">
-                <CreditCard size={18} />
-                <span>Pagar Fatura</span>
+            <Button onClick={() => setShowPayInvoice(!showPayInvoice)} variant="secondary" className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2">
+                <CreditCard size={16} className="md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Pagar Fatura</span>
+                <span className="sm:hidden">Pagar</span>
             </Button>
-            <Button onClick={() => { setShowForm(!showForm); setShowEdit(false); }} variant="primary" className="flex items-center space-x-2">
-                <Plus size={18} />
-                <span>Nova Transação</span>
+            <Button onClick={() => { setShowForm(!showForm); setShowEdit(false); }} variant="primary" className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2">
+                <Plus size={16} className="md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Nova Transação</span>
+                <span className="sm:hidden">Nova</span>
             </Button>
         </div>
       </div>
