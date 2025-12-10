@@ -20,24 +20,34 @@ const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
   const { theme } = useApp();
 
   const RADIAN = Math.PI / 180;
+  
   const renderCustomLabel = ({
     cx, cy, midAngle, innerRadius, outerRadius, percent, index
   }: any) => {
-    const radius = activeIndex === index ? outerRadius + 35 : innerRadius + (outerRadius - innerRadius) * 0.5;
+    // Só mostra percentual se o slice estiver ativo
+    if (activeIndex !== index) return null;
+
+    const radius = outerRadius + 50;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill={data[index]?.color || '#ffffff'}
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        className="font-bold text-xs sm:text-sm pointer-events-none transition-all duration-300"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
+      <g>
+        <text
+          x={x}
+          y={y}
+          fill={data[index]?.color || '#ffffff'}
+          textAnchor={x > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          className="font-bold text-sm sm:text-base pointer-events-none"
+          style={{
+            animation: 'fadeIn 0.3s ease-in',
+            textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          }}
+        >
+          {`${(percent * 100).toFixed(1)}%`}
+        </text>
+      </g>
     );
   };
 
@@ -57,14 +67,21 @@ const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
 
   return (
     <div className="space-y-4">
-      <div className="h-64 sm:h-72 w-full flex items-center justify-center">
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+      
+      <div className="h-72 sm:h-80 w-full flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <defs>
               {data.map((entry, index) => (
                 <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
-                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.8} />
+                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.75} />
                 </linearGradient>
               ))}
             </defs>
@@ -74,25 +91,37 @@ const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
               cy="50%"
               labelLine={false}
               label={renderCustomLabel}
-              outerRadius={activeIndex !== null ? 95 : 85}
-              innerRadius={55}
-              paddingAngle={2}
+              outerRadius={activeIndex !== null ? 100 : 88}
+              innerRadius={50}
+              paddingAngle={activeIndex !== null ? 3 : 2}
               dataKey="value"
-              onMouseEnter={(_, index) => setActiveIndex(index)}
-              onMouseLeave={() => setActiveIndex(null)}
-              animationDuration={300}
+              onClick={(_, index) => setActiveIndex(activeIndex === index ? null : index)}
+              onMouseEnter={(_, index) => {
+                if (activeIndex === null) {
+                  setActiveIndex(index);
+                }
+              }}
+              onMouseLeave={() => {
+                if (activeIndex !== null) {
+                  setActiveIndex(null);
+                }
+              }}
+              animationDuration={400}
+              animationEasing="ease-out"
             >
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={`url(#grad-${index})`}
-                  stroke={theme === 'dark' ? '#1c1f26' : '#ffffff'}
-                  strokeWidth={3}
-                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
+                  stroke={theme === 'dark' ? '#0d1117' : '#ffffff'}
+                  strokeWidth={activeIndex === index ? 2 : 1}
+                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.5}
                   style={{
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    filter: activeIndex === index ? 'drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.35))' : 'drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15))',
+                    transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    filter: activeIndex === index 
+                      ? 'drop-shadow(0px 12px 24px rgba(0, 0, 0, 0.3))' 
+                      : 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))',
                   }}
                 />
               ))}
@@ -100,25 +129,26 @@ const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
             <Tooltip
               contentStyle={{
                 backgroundColor: theme === 'dark' ? '#0d1117' : '#ffffff',
-                borderColor: theme === 'dark' ? '#30363d' : '#e5e7eb',
-                borderWidth: 2,
-                borderRadius: '12px',
-                padding: '12px 16px',
-                boxShadow: '0 12px 24px rgba(0,0,0,0.2)',
+                borderColor: theme === 'dark' ? '#30363d' : '#d1d5db',
+                borderWidth: 1,
+                borderRadius: '8px',
+                padding: '10px 14px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
               }}
-              itemStyle={{ color: '#ffffff', fontWeight: 700, fontSize: '14px' }}
+              itemStyle={{ color: theme === 'dark' ? '#c9d1d9' : '#1f2937', fontWeight: 600, fontSize: '13px' }}
               formatter={(value: number, name: string, props: any) => {
                 const percent = ((value / total) * 100).toFixed(1);
-                return [`${formatCurrency(value)} (${percent}%)`, name];
+                return [`${formatCurrency(value)} • ${percent}%`, ''];
               }}
-              labelStyle={{ color: '#ffffff' }}
+              labelStyle={{ display: 'none' }}
+              cursor={{ fill: 'transparent' }}
             />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Legend com detalhes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2">
+      {/* Legend com detalhes - Melhorada */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 px-1">
         {data.map((item, index) => {
           const percent = ((item.value / total) * 100).toFixed(1);
           const isActive = activeIndex === index;
@@ -127,34 +157,47 @@ const InteractivePieChart: React.FC<InteractivePieChartProps> = ({ data }) => {
             <div
               key={index}
               onClick={() => setActiveIndex(isActive ? null : index)}
-              className={`p-2.5 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
+              className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-300 group ${
                 isActive
-                  ? 'border-current bg-opacity-20'
-                  : 'border-transparent hover:border-github-border bg-github-surface/30 hover:bg-github-surface/50'
+                  ? 'scale-105 shadow-md'
+                  : 'border-github-border/30 hover:border-github-border hover:shadow-sm'
               }`}
-              style={isActive ? { backgroundColor: `${item.color}20`, borderColor: item.color } : {}}
+              style={
+                isActive
+                  ? {
+                      backgroundColor: `${item.color}15`,
+                      borderColor: item.color,
+                    }
+                  : {}
+              }
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   <div
-                    className={`w-4 h-4 rounded-md flex-shrink-0 transition-transform ${
-                      isActive ? 'scale-125' : ''
+                    className={`w-3 h-3 rounded-sm flex-shrink-0 transition-all duration-300 ${
+                      isActive ? 'scale-150' : 'group-hover:scale-110'
                     }`}
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-xs sm:text-sm font-medium text-github-text truncate">
+                  <span className={`text-sm font-medium truncate transition-colors duration-300 ${
+                    isActive ? 'text-github-text font-semibold' : 'text-github-muted group-hover:text-github-text'
+                  }`}>
                     {item.name}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-1.5 ml-6">
-                <span className="text-xs font-bold text-github-muted">
-                  {formatCurrency(item.value)}
-                </span>
-                <span className="text-xs font-bold ml-2" style={{ color: item.color }}>
-                  {percent}%
-                </span>
-              </div>
+              
+              {/* Valores mostrados ao expandir */}
+              {isActive && (
+                <div className="flex items-center justify-between mt-2.5 ml-5 pt-2.5 border-t border-github-border/20 animate-in fade-in duration-300">
+                  <span className="text-xs font-bold text-github-text">
+                    {formatCurrency(item.value)}
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: item.color }}>
+                    {percent}%
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
