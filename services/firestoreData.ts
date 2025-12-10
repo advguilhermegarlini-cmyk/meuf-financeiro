@@ -205,6 +205,35 @@ export const FirestoreDataService = {
     return await investmentSvc.deleteInvestment(userId, id);
   },
 
+  // SUBSCRIPTIONS
+  async saveSubscription(userId: string, subscription: any) {
+    // Validate subscription data
+    if (!subscription.cardId || !subscription.name || !subscription.amount || !subscription.categoryId) {
+      throw new Error('subscription obrigatória: cardId, name, amount, categoryId são campos obrigatórios');
+    }
+
+    if (subscription.id) {
+      // Update existing
+      return await (investmentSvc as any).updateSubscription?.(userId, subscription) || subscription;
+    } else {
+      // Create new
+      return await (investmentSvc as any).createSubscription?.(userId, subscription) || subscription;
+    }
+  },
+
+  async getSubscriptions(userId: string) {
+    try {
+      return await (investmentSvc as any).getSubscriptions?.(userId) || [];
+    } catch (e) {
+      console.error('Error fetching subscriptions:', e);
+      return [];
+    }
+  },
+
+  async deleteSubscription(userId: string, id: string) {
+    return await (investmentSvc as any).deleteSubscription?.(userId, id);
+  },
+
   // USER / CLEANUP
   async deleteAllUserData(userId: string) {
     // Delete user document (this does not cascade-delete subcollections automatically).

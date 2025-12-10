@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Transaction, Category, Bank, DashboardStats, Investment, InvoiceStats } from './types';
+import { User, Transaction, Category, Bank, DashboardStats, Investment, InvoiceStats, Subscription } from './types';
 import { generateId, GITHUB_COLORS } from './utils';
 import { AuthService } from './services/auth';
 import { FirestoreDataService as DataService } from './services/firestoreData';
@@ -73,6 +73,7 @@ interface AppContextType {
   categories: Category[];
   banks: Bank[];
   investments: Investment[];
+  subscriptions: Subscription[];
   
   // Transactions
   addTransaction: (t: Omit<Transaction, 'id'>, recurrence?: { frequency: string, times: number }) => Promise<void>;
@@ -89,6 +90,11 @@ interface AppContextType {
   addBank: (bank: Omit<Bank, 'id'>) => Promise<void>;
   updateBank: (bank: Bank) => Promise<void>;
   deleteBank: (id: string) => Promise<void>;
+
+  // Subscriptions
+  addSubscription: (sub: Omit<Subscription, 'id'>) => Promise<void>;
+  updateSubscription: (sub: Subscription) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
 
   // Investments
   addInvestment: (inv: Omit<Investment, 'id'>) => Promise<void>;
@@ -112,6 +118,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingOperations, setPendingOperations] = useState(0);
 
@@ -160,6 +167,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
               setBanks([]);
               setInvestments([]);
               setCategories([]);
+              setSubscriptions([]);
               return;
           }
 
@@ -176,18 +184,20 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
                     // ignore logging errors
                   }
 
-                  const [txs, cats, bks, invs] = await Promise.all([
+                  const [txs, cats, bks, invs, subs] = await Promise.all([
                       (DataService as any).getTransactions(user.id),
                       (DataService as any).getCategories(user.id),
                       (DataService as any).getBanks(user.id),
-                      (DataService as any).getInvestments(user.id)
+                      (DataService as any).getInvestments(user.id),
+                      (DataService as any).getSubscriptions(user.id)
                   ]);
 
-              console.log(`✅ Contexto carregado: ${txs.length} txs, ${cats.length} cats, ${bks.length} bks, ${invs.length} invs`);
+              console.log(`✅ Contexto carregado: ${txs.length} txs, ${cats.length} cats, ${bks.length} bks, ${invs.length} invs, ${subs.length} subs`);
               setTransactions(txs);
               setCategories(cats);
               setBanks(bks);
               setInvestments(invs);
+              setSubscriptions(subs);
           } catch (e) {
               console.error("Error fetching data:", e);
           } finally {
@@ -624,6 +634,46 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     }
   };
 
+  // --- SUBSCRIPTIONS (Assinaturas de Cartão de Crédito) ---
+
+  const addSubscription = async (sub: Omit<Subscription, 'id'>) => {
+    if(!user) return;
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      const color = GITHUB_COLORS[subscriptions.length % GITHUB_COLORS.length];
+      const subData = { ...sub, color, isActive: true };
+      const newSub = await DataService.saveSubscription(user.id, subData as any);
+      setSubscriptions(prev => [...prev, newSub]);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const updateSubscription = async (sub: Subscription) => {
+    if(!user) return;
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.saveSubscription(user.id, sub);
+      setSubscriptions(prev => prev.map(s => s.id === sub.id ? sub : s));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const deleteSubscription = async (id: string) => {
+    if(!user) return;
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.deleteSubscription(user.id, id);
+      setSubscriptions(prev => prev.filter(s => s.id !== id));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
+  };
+
   const addCategory = async (name: string, type: 'income' | 'expense') => {
     if(!user) return;
     
@@ -916,12 +966,13 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     return { income, expenses, balance, investments: totalInvested, creditCardBill };
   };
 
-  return (
+    return (
     <AppContext.Provider value={{
-      user, theme, isLoading, toggleTheme, login, register, updateUserProfile, uploadAvatar, changePassword, resetPassword, deleteAccount, logout, transactions, categories, banks, investments,
+      user, theme, isLoading, toggleTheme, login, register, updateUserProfile, uploadAvatar, changePassword, resetPassword, deleteAccount, logout, transactions, categories, banks, investments, subscriptions,
       addTransaction, deleteTransaction, updateTransaction, payInvoice,
       addCategory, updateCategory, deleteCategory,
       addBank, updateBank, deleteBank,
+      addSubscription, updateSubscription, deleteSubscription,
       addInvestment, updateInvestment, deleteInvestment, handleInvestmentTransaction,
       getDashboardStats, getBankBalanceAtDate, getOverallBalanceAtDate, getInvoiceStats
     }}>

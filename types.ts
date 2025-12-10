@@ -54,6 +54,21 @@ export interface Investment {
   currentValue?: number; 
 }
 
+export interface Subscription {
+  id: string;
+  cardId: string;
+  name: string;
+  amount: number;
+  categoryId: string;
+  frequency: 'monthly' | 'yearly';
+  dayOfMonth: number;
+  isActive: boolean;
+  startDate: string;
+  endDate?: string;
+  notes?: string;
+  color?: string;
+}
+
 export interface Transaction {
   id: string;
   amount: number;
