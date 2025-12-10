@@ -13,13 +13,13 @@ export const SYSTEM_CATEGORY_ID = 'system_internal';
 /**
  * Helper: Retry com exponential backoff para operações assíncronas
  * @param fn - Função assíncrona a executar
- * @param maxAttempts - Número máximo de tentativas (default: 3)
- * @param initialDelay - Delay inicial em ms (default: 1000)
+ * @param maxAttempts - Número máximo de tentativas (default: 5)
+ * @param initialDelay - Delay inicial em ms (default: 500)
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxAttempts: number = 3,
-  initialDelay: number = 1000
+  maxAttempts: number = 5,
+  initialDelay: number = 500
 ): Promise<T> {
   let lastError: Error | null = null;
   
@@ -113,6 +113,7 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingOperations, setPendingOperations] = useState(0);
 
   // Initial Load (Session Check)
   useEffect(() => {
@@ -205,6 +206,19 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     localStorage.setItem('mc_theme', theme);
   }, [theme]);
 
+  // Prevent page closure during pending operations
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingOperations > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [pendingOperations]);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -292,112 +306,115 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
   const addTransaction = async (t: Omit<Transaction, 'id'>, recurrence?: { frequency: string, times: number }) => {
     if (!user) return;
-    const newTxList: Omit<Transaction, 'id'>[] = [];
-    const bankUpdates: {id: string, balance: number}[] = [];
     
-    // Logic for generating transaction objects...
-    // 1. Transfers
-    if (t.type === 'transfer' && t.toBankId) {
-       const transferTx: Omit<Transaction, 'id'> = { ...t, categoryId: SYSTEM_CATEGORY_ID };
-       newTxList.push(transferTx);
-       
-       const source = banks.find(b => b.id === t.bankId);
-       const dest = banks.find(b => b.id === t.toBankId);
-       if(source) bankUpdates.push({ id: source.id, balance: source.balance - t.amount });
-       if(dest) bankUpdates.push({ id: dest.id, balance: dest.balance + t.amount });
-    } 
-    // 2. Recurring
-    else if (recurrence && recurrence.times > 1) {
-        const originalDate = new Date(t.date);
+    setPendingOperations(prev => prev + 1);
+    try {
+      const newTxList: Omit<Transaction, 'id'>[] = [];
+      const bankUpdates: {id: string, balance: number}[] = [];
+      
+      // Logic for generating transaction objects...
+      // 1. Transfers
+      if (t.type === 'transfer' && t.toBankId) {
+         const transferTx: Omit<Transaction, 'id'> = { ...t, categoryId: SYSTEM_CATEGORY_ID };
+         newTxList.push(transferTx);
+         
+         const source = banks.find(b => b.id === t.bankId);
+         const dest = banks.find(b => b.id === t.toBankId);
+         if(source) bankUpdates.push({ id: source.id, balance: source.balance - t.amount });
+         if(dest) bankUpdates.push({ id: dest.id, balance: dest.balance + t.amount });
+      } 
+      // 2. Recurring
+      else if (recurrence && recurrence.times > 1) {
+          const originalDate = new Date(t.date);
 
-        for (let i = 0; i < recurrence.times; i++) {
-            const newDate = new Date(originalDate);
-            if (recurrence.frequency === 'daily') newDate.setDate(newDate.getDate() + i);
-            if (recurrence.frequency === 'weekly') newDate.setDate(newDate.getDate() + (i * 7));
-            if (recurrence.frequency === 'monthly') newDate.setMonth(newDate.getMonth() + i);
-            if (recurrence.frequency === 'yearly') newDate.setFullYear(newDate.getFullYear() + i);
+          for (let i = 0; i < recurrence.times; i++) {
+              const newDate = new Date(originalDate);
+              if (recurrence.frequency === 'daily') newDate.setDate(newDate.getDate() + i);
+              if (recurrence.frequency === 'weekly') newDate.setDate(newDate.getDate() + (i * 7));
+              if (recurrence.frequency === 'monthly') newDate.setMonth(newDate.getMonth() + i);
+              if (recurrence.frequency === 'yearly') newDate.setFullYear(newDate.getFullYear() + i);
 
-            const tx: Omit<Transaction, 'id'> = {
-                ...t,
-                date: newDate.toISOString(),
-                recurrenceGroupId: generateId(),
-                recurrenceFrequency: recurrence.frequency as any
-            };
-            newTxList.push(tx);
-        }
+              const tx: Omit<Transaction, 'id'> = {
+                  ...t,
+                  date: newDate.toISOString(),
+                  recurrenceGroupId: generateId(),
+                  recurrenceFrequency: recurrence.frequency as any
+              };
+              newTxList.push(tx);
+          }
 
-        if (!t.isCreditCard) {
-            const totalAmount = newTxList.reduce((acc, curr) => acc + curr.amount, 0);
-            const b = banks.find(b => b.id === t.bankId);
-            if(b) {
-                const factor = t.type === 'income' ? 1 : -1;
-                bankUpdates.push({ id: b.id, balance: b.balance + (totalAmount * factor) });
-            }
-        }
-    }
-    // 3. Credit Card Installments
-    else if (t.isCreditCard && t.type === 'expense') {
-        const bank = banks.find(b => b.id === t.bankId);
-        const closingDay = bank?.creditCardClosingDay || 1;
-        const dueDay = bank?.creditCardDueDay || 10;
-        
-        const purchaseDate = new Date(t.date);
-        const purchaseDay = purchaseDate.getDate();
-        
-        let targetMonth = purchaseDate.getMonth();
-        let targetYear = purchaseDate.getFullYear();
-
-        if (purchaseDay > closingDay) {
-            targetMonth++;
-            if (targetMonth > 11) {
-                targetMonth = 0;
-                targetYear++;
-            }
-        }
-
-        const numInstallments = t.installments && t.installments > 0 ? t.installments : 1;
-        const installmentAmount = t.amount / numInstallments;
-        const parentId = generateId();
-
-        for (let i = 0; i < numInstallments; i++) {
-            let instMonth = targetMonth + i;
-            let instYear = targetYear;
-            while (instMonth > 11) { instMonth -= 12; instYear++; }
-
-            const dueDate = new Date(instYear, instMonth, dueDay);
-            
-            newTxList.push({
-                ...t,
-                originalTransactionId: parentId,
-                amount: installmentAmount,
-                date: dueDate.toISOString(), 
-                installmentNumber: i + 1,
-                installments: numInstallments,
-                description: numInstallments > 1 ? `${t.description}` : t.description,
-                notes: `Compra em ${purchaseDate.toLocaleDateString('pt-BR')} (Parcela ${i+1}/${numInstallments})`
-            });
-        }
-    } 
-    // 4. Standard
-    else {
-      newTxList.push({ ...t });
-      if (!t.isCreditCard) {
-          const b = banks.find(b => b.id === t.bankId);
-          if (b) {
-            const factor = t.type === 'income' ? 1 : -1;
-            bankUpdates.push({ id: b.id, balance: b.balance + (t.amount * factor) });
+          if (!t.isCreditCard) {
+              const totalAmount = newTxList.reduce((acc, curr) => acc + curr.amount, 0);
+              const b = banks.find(b => b.id === t.bankId);
+              if(b) {
+                  const factor = t.type === 'income' ? 1 : -1;
+                  bankUpdates.push({ id: b.id, balance: b.balance + (totalAmount * factor) });
+              }
           }
       }
-    }
+      // 3. Credit Card Installments
+      else if (t.isCreditCard && t.type === 'expense') {
+          const bank = banks.find(b => b.id === t.bankId);
+          const closingDay = bank?.creditCardClosingDay || 1;
+          const dueDay = bank?.creditCardDueDay || 10;
+          
+          const purchaseDate = new Date(t.date);
+          const purchaseDay = purchaseDate.getDate();
+          
+          let targetMonth = purchaseDate.getMonth();
+          let targetYear = purchaseDate.getFullYear();
 
-    // --- API CALLS ---
-    console.log('📤 Enviando', newTxList.length, 'transações para o Firestore...');
-    try {
+          if (purchaseDay > closingDay) {
+              targetMonth++;
+              if (targetMonth > 11) {
+                  targetMonth = 0;
+                  targetYear++;
+              }
+          }
+
+          const numInstallments = t.installments && t.installments > 0 ? t.installments : 1;
+          const installmentAmount = t.amount / numInstallments;
+          const parentId = generateId();
+
+          for (let i = 0; i < numInstallments; i++) {
+              let instMonth = targetMonth + i;
+              let instYear = targetYear;
+              while (instMonth > 11) { instMonth -= 12; instYear++; }
+
+              const dueDate = new Date(instYear, instMonth, dueDay);
+              
+              newTxList.push({
+                  ...t,
+                  originalTransactionId: parentId,
+                  amount: installmentAmount,
+                  date: dueDate.toISOString(), 
+                  installmentNumber: i + 1,
+                  installments: numInstallments,
+                  description: numInstallments > 1 ? `${t.description}` : t.description,
+                  notes: `Compra em ${purchaseDate.toLocaleDateString('pt-BR')} (Parcela ${i+1}/${numInstallments})`
+              });
+          }
+      } 
+      // 4. Standard
+      else {
+        newTxList.push({ ...t });
+        if (!t.isCreditCard) {
+            const b = banks.find(b => b.id === t.bankId);
+            if (b) {
+              const factor = t.type === 'income' ? 1 : -1;
+              bankUpdates.push({ id: b.id, balance: b.balance + (t.amount * factor) });
+            }
+        }
+      }
+
+      // --- API CALLS ---
+      console.log('📤 Enviando', newTxList.length, 'transações para o Firestore...');
+      
       // Usar retry com backoff para melhor resiliência
       const createdTxs = await retryWithBackoff(
         () => DataService.createTransactionsBatch(user.id, newTxList),
-        3,  // maxAttempts
-        1000  // initialDelay em ms
+        5,  // maxAttempts (aumentado de 3)
+        500  // initialDelay em ms (reduzido de 1000)
       );
       
       console.log('✅ Transações criadas no Firestore:', createdTxs);
@@ -406,8 +423,8 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
       if (bankUpdates.length > 0) {
         await retryWithBackoff(
           () => DataService.updateBankBalances(user.id, bankUpdates),
-          2,
-          500
+          4,  // maxAttempts (aumentado de 2)
+          300  // initialDelay em ms (reduzido de 500)
         );
       }
 
@@ -436,258 +453,337 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
       if (error instanceof Error) {
         alert(`Erro ao salvar transação: ${error.message}`);
       }
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
     }
   };
 
   const deleteTransaction = async (id: string, deleteFutureSeries: boolean = false) => {
     if(!user) return;
-    const tx = transactions.find(t => t.id === id);
-    if (!tx) return;
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      const tx = transactions.find(t => t.id === id);
+      if (!tx) return;
 
-    let idsToDelete = [id];
+      let idsToDelete = [id];
 
-    if (tx.isCreditCard && (tx.installments || 0) > 1) {
-        const rootId = tx.originalTransactionId || tx.id;
-        idsToDelete = transactions
-            .filter(t => t.id === rootId || t.originalTransactionId === rootId)
-            .map(t => t.id);
+      if (tx.isCreditCard && (tx.installments || 0) > 1) {
+          const rootId = tx.originalTransactionId || tx.id;
+          idsToDelete = transactions
+              .filter(t => t.id === rootId || t.originalTransactionId === rootId)
+              .map(t => t.id);
+      }
+      else if (deleteFutureSeries && tx.recurrenceGroupId) {
+          const txDate = new Date(tx.date);
+          idsToDelete = transactions
+              .filter(t => t.recurrenceGroupId === tx.recurrenceGroupId && new Date(t.date) >= txDate)
+              .map(t => t.id);
+      }
+
+      const txsToDelete = transactions.filter(t => idsToDelete.includes(t.id));
+      const bankUpdates: {id: string, balance: number}[] = [];
+
+      // Reverse Balance Calculation
+      txsToDelete.forEach(curr => {
+          if (curr.type === 'transfer' && curr.toBankId) {
+              const source = banks.find(b => b.id === curr.bankId);
+              const dest = banks.find(b => b.id === curr.toBankId);
+              // We need to use the LATEST known balance (from current state) for accumulation if multiple tx affect same bank
+              // Simple approach: calculate deltas
+          }
+      });
+
+      // Re-calculating bank balances correctly is complex when batch deleting.
+      // For simplicity in this demo, we iterate state.
+      // In production, the backend handles transaction rollbacks.
+      let tempBanks = [...banks];
+      txsToDelete.forEach(curr => {
+           if (curr.type === 'transfer' && curr.toBankId) {
+               const sIdx = tempBanks.findIndex(b => b.id === curr.bankId);
+               const dIdx = tempBanks.findIndex(b => b.id === curr.toBankId);
+               if(sIdx > -1) tempBanks[sIdx].balance += curr.amount;
+               if(dIdx > -1) tempBanks[dIdx].balance -= curr.amount;
+           } else if (!curr.isCreditCard) {
+               const idx = tempBanks.findIndex(b => b.id === curr.bankId);
+               if(idx > -1) {
+                   const factor = curr.type === 'income' ? -1 : 1; // Reverse logic
+                   tempBanks[idx].balance += (curr.amount * factor);
+               }
+           }
+      });
+
+      // API Calls
+      await DataService.deleteTransactions(user.id, idsToDelete);
+      // Identify changed banks to push updates
+      const changedBanks = tempBanks.filter(tb => {
+          const original = banks.find(b => b.id === tb.id);
+          return original && original.balance !== tb.balance;
+      });
+      if(changedBanks.length > 0) {
+          await DataService.updateBankBalances(user.id, changedBanks.map(b => ({id: b.id, balance: b.balance})));
+      }
+
+      // State Updates
+      setTransactions(prev => prev.filter(t => !idsToDelete.includes(t.id)));
+      setBanks(tempBanks);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
     }
-    else if (deleteFutureSeries && tx.recurrenceGroupId) {
-        const txDate = new Date(tx.date);
-        idsToDelete = transactions
-            .filter(t => t.recurrenceGroupId === tx.recurrenceGroupId && new Date(t.date) >= txDate)
-            .map(t => t.id);
-    }
-
-    const txsToDelete = transactions.filter(t => idsToDelete.includes(t.id));
-    const bankUpdates: {id: string, balance: number}[] = [];
-
-    // Reverse Balance Calculation
-    txsToDelete.forEach(curr => {
-        if (curr.type === 'transfer' && curr.toBankId) {
-            const source = banks.find(b => b.id === curr.bankId);
-            const dest = banks.find(b => b.id === curr.toBankId);
-            // We need to use the LATEST known balance (from current state) for accumulation if multiple tx affect same bank
-            // Simple approach: calculate deltas
-        }
-    });
-
-    // Re-calculating bank balances correctly is complex when batch deleting.
-    // For simplicity in this demo, we iterate state.
-    // In production, the backend handles transaction rollbacks.
-    let tempBanks = [...banks];
-    txsToDelete.forEach(curr => {
-         if (curr.type === 'transfer' && curr.toBankId) {
-             const sIdx = tempBanks.findIndex(b => b.id === curr.bankId);
-             const dIdx = tempBanks.findIndex(b => b.id === curr.toBankId);
-             if(sIdx > -1) tempBanks[sIdx].balance += curr.amount;
-             if(dIdx > -1) tempBanks[dIdx].balance -= curr.amount;
-         } else if (!curr.isCreditCard) {
-             const idx = tempBanks.findIndex(b => b.id === curr.bankId);
-             if(idx > -1) {
-                 const factor = curr.type === 'income' ? -1 : 1; // Reverse logic
-                 tempBanks[idx].balance += (curr.amount * factor);
-             }
-         }
-    });
-
-    // API Calls
-    await DataService.deleteTransactions(user.id, idsToDelete);
-    // Identify changed banks to push updates
-    const changedBanks = tempBanks.filter(tb => {
-        const original = banks.find(b => b.id === tb.id);
-        return original && original.balance !== tb.balance;
-    });
-    if(changedBanks.length > 0) {
-        await DataService.updateBankBalances(user.id, changedBanks.map(b => ({id: b.id, balance: b.balance})));
-    }
-
-    // State Updates
-    setTransactions(prev => prev.filter(t => !idsToDelete.includes(t.id)));
-    setBanks(tempBanks);
   };
 
   const updateTransaction = async (t: Transaction) => {
     if(!user) return;
-    // Note: Deep logic for balance updates on edit is omitted for brevity, 
-    // assuming simple text/category edits or that backend handles logic.
-    // In a full app, you'd reverse old transaction effect and apply new one.
     
-    const updatedTransaction = await DataService.updateTransaction(user.id, t);
-    setTransactions(prev => prev.map(curr => curr.id === t.id ? updatedTransaction : curr));
+    setPendingOperations(prev => prev + 1);
+    try {
+      // Note: Deep logic for balance updates on edit is omitted for brevity, 
+      // assuming simple text/category edits or that backend handles logic.
+      // In a full app, you'd reverse old transaction effect and apply new one.
+      
+      const updatedTransaction = await DataService.updateTransaction(user.id, t);
+      setTransactions(prev => prev.map(curr => curr.id === t.id ? updatedTransaction : curr));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const payInvoice = async (cardId: string, amount: number, paymentDate: Date, sourceBankId: string, isFullPayment: boolean) => {
     if(!user) return;
     
-    // 1. Calculate new balance for source bank
-    const sourceBank = banks.find(b => b.id === sourceBankId);
-    if (!sourceBank) return;
-    const newSourceBalance = sourceBank.balance - amount;
+    setPendingOperations(prev => prev + 1);
+    try {
+      // 1. Calculate new balance for source bank
+      const sourceBank = banks.find(b => b.id === sourceBankId);
+      if (!sourceBank) return;
+      const newSourceBalance = sourceBank.balance - amount;
 
-    // 2. Prepare Transactions
-    const expenseTx: Transaction = {
-      id: generateId(),
-      description: 'Pagamento de Fatura',
-      amount: amount,
-      date: paymentDate.toISOString(),
-      type: 'expense',
-      categoryId: SYSTEM_CATEGORY_ID, 
-      bankId: sourceBankId, 
-      isCreditCard: false,
-      isReconciled: true,
-      notes: `Débito para pagamento do cartão ${banks.find(b => b.id === cardId)?.name}`
-    };
-
-    const incomeTx: Transaction = {
+      // 2. Prepare Transactions
+      const expenseTx: Transaction = {
         id: generateId(),
-        description: 'Crédito de Pagamento',
+        description: 'Pagamento de Fatura',
         amount: amount,
         date: paymentDate.toISOString(),
-        type: 'income',
-        categoryId: SYSTEM_CATEGORY_ID,
-        bankId: cardId,
-        isCreditCard: true,
+        type: 'expense',
+        categoryId: SYSTEM_CATEGORY_ID, 
+        bankId: sourceBankId, 
+        isCreditCard: false,
         isReconciled: true,
-        notes: `Pagamento recebido via conta ${sourceBank.name}`
-    };
+        notes: `Débito para pagamento do cartão ${banks.find(b => b.id === cardId)?.name}`
+      };
 
-    let newTxs = [expenseTx, incomeTx];
-    let txsToUpdate: Transaction[] = [];
+      const incomeTx: Transaction = {
+          id: generateId(),
+          description: 'Crédito de Pagamento',
+          amount: amount,
+          date: paymentDate.toISOString(),
+          type: 'income',
+          categoryId: SYSTEM_CATEGORY_ID,
+          bankId: cardId,
+          isCreditCard: true,
+          isReconciled: true,
+          notes: `Pagamento recebido via conta ${sourceBank.name}`
+      };
 
-    // 3. Handle Full Payment Reconciliation
-    if (isFullPayment) {
-        const payMonth = paymentDate.getMonth();
-        const payYear = paymentDate.getFullYear();
-        
-        // Find transactions to update
-        transactions.forEach(t => {
-             if (t.bankId === cardId && t.isCreditCard && !t.isReconciled && t.type === 'expense') {
-                const tDate = new Date(t.date);
-                if (tDate.getFullYear() < payYear || (tDate.getFullYear() === payYear && tDate.getMonth() <= payMonth)) {
-                    txsToUpdate.push({ ...t, isReconciled: true });
-                }
-            }
-        });
+      let newTxs = [expenseTx, incomeTx];
+      let txsToUpdate: Transaction[] = [];
+
+      // 3. Handle Full Payment Reconciliation
+      if (isFullPayment) {
+          const payMonth = paymentDate.getMonth();
+          const payYear = paymentDate.getFullYear();
+          
+          // Find transactions to update
+          transactions.forEach(t => {
+               if (t.bankId === cardId && t.isCreditCard && !t.isReconciled && t.type === 'expense') {
+                  const tDate = new Date(t.date);
+                  if (tDate.getFullYear() < payYear || (tDate.getFullYear() === payYear && tDate.getMonth() <= payMonth)) {
+                      txsToUpdate.push({ ...t, isReconciled: true });
+                  }
+              }
+          });
+      }
+
+      // API Calls
+      await DataService.updateBankBalance(user.id, sourceBankId, newSourceBalance);
+      await DataService.createTransactionsBatch(user.id, newTxs);
+      // Batch update reconciled transactions
+      for (const t of txsToUpdate) {
+          await DataService.updateTransaction(user.id, t);
+      }
+
+      // State Updates
+      setBanks(prev => prev.map(b => b.id === sourceBankId ? { ...b, balance: newSourceBalance } : b));
+      setTransactions(prev => {
+          const updatedIds = txsToUpdate.map(t => t.id);
+          const merged = prev.map(p => updatedIds.includes(p.id) ? { ...p, isReconciled: true } : p);
+          return [...newTxs, ...merged];
+      });
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
     }
-
-    // API Calls
-    await DataService.updateBankBalance(user.id, sourceBankId, newSourceBalance);
-    await DataService.createTransactionsBatch(user.id, newTxs);
-    // Batch update reconciled transactions
-    for (const t of txsToUpdate) {
-        await DataService.updateTransaction(user.id, t);
-    }
-
-    // State Updates
-    setBanks(prev => prev.map(b => b.id === sourceBankId ? { ...b, balance: newSourceBalance } : b));
-    setTransactions(prev => {
-        const updatedIds = txsToUpdate.map(t => t.id);
-        const merged = prev.map(p => updatedIds.includes(p.id) ? { ...p, isReconciled: true } : p);
-        return [...newTxs, ...merged];
-    });
   };
 
   const addCategory = async (name: string, type: 'income' | 'expense') => {
     if(!user) return;
-    const color = GITHUB_COLORS[categories.length % GITHUB_COLORS.length];
-    const categoryData = { name, color, type };
     
-    // Firestore gera o ID automaticamente e retorna
-    const newCat = await DataService.createCategory(user.id, categoryData);
-    setCategories(prev => [...prev, newCat]);
+    setPendingOperations(prev => prev + 1);
+    try {
+      const color = GITHUB_COLORS[categories.length % GITHUB_COLORS.length];
+      const categoryData = { name, color, type };
+      
+      // Firestore gera o ID automaticamente e retorna
+      const newCat = await DataService.createCategory(user.id, categoryData);
+      setCategories(prev => [...prev, newCat]);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const updateCategory = async (c: Category) => {
     if(!user) return;
-    await DataService.updateCategory(user.id, c);
-    setCategories(prev => prev.map(cat => cat.id === c.id ? c : cat));
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.updateCategory(user.id, c);
+      setCategories(prev => prev.map(cat => cat.id === c.id ? c : cat));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const deleteCategory = async (id: string) => {
     if(!user) return;
-    const inUse = transactions.some(t => t.categoryId === id);
-    if(inUse) {
-        alert("Não é possível excluir categoria em uso.");
-        return;
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      const inUse = transactions.some(t => t.categoryId === id);
+      if(inUse) {
+          alert("Não é possível excluir categoria em uso.");
+          return;
+      }
+      await DataService.deleteCategory(user.id, id);
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
     }
-    await DataService.deleteCategory(user.id, id);
-    setCategories(prev => prev.filter(c => c.id !== id));
   };
 
   const addBank = async (bank: Omit<Bank, 'id'>) => {
     if(!user) return;
-    // Firestore gera o ID automaticamente
-    const newBank = await DataService.saveBank(user.id, bank as any);
-    setBanks(prev => [...prev, newBank]);
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      // Firestore gera o ID automaticamente
+      const newBank = await DataService.saveBank(user.id, bank as any);
+      setBanks(prev => [...prev, newBank]);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const updateBank = async (bank: Bank) => {
     if(!user) return;
-    await DataService.saveBank(user.id, bank); // Save handles insert/update in our mock
-    setBanks(prev => prev.map(b => b.id === bank.id ? bank : b));
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.saveBank(user.id, bank); // Save handles insert/update in our mock
+      setBanks(prev => prev.map(b => b.id === bank.id ? bank : b));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const deleteBank = async (id: string) => {
     if(!user) return;
-    await DataService.deleteBank(user.id, id);
-    setBanks(prev => prev.filter(b => b.id !== id));
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.deleteBank(user.id, id);
+      setBanks(prev => prev.filter(b => b.id !== id));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const addInvestment = async (inv: Omit<Investment, 'id'>) => {
     if(!user) return;
-    // Firestore gera o ID automaticamente
-    const newInv = await DataService.saveInvestment(user.id, inv as any);
-    setInvestments(prev => [...prev, newInv]);
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      // Firestore gera o ID automaticamente
+      const newInv = await DataService.saveInvestment(user.id, inv as any);
+      setInvestments(prev => [...prev, newInv]);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const updateInvestment = async (inv: Investment) => {
     if(!user) return;
-    await DataService.saveInvestment(user.id, inv);
-    setInvestments(prev => prev.map(i => i.id === inv.id ? inv : i));
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.saveInvestment(user.id, inv);
+      setInvestments(prev => prev.map(i => i.id === inv.id ? inv : i));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const deleteInvestment = async (id: string) => {
     if(!user) return;
-    await DataService.deleteInvestment(user.id, id);
-    setInvestments(prev => prev.filter(i => i.id !== id));
+    
+    setPendingOperations(prev => prev + 1);
+    try {
+      await DataService.deleteInvestment(user.id, id);
+      setInvestments(prev => prev.filter(i => i.id !== id));
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   const handleInvestmentTransaction = async (investmentId: string, amount: number, type: 'in' | 'out') => {
     if(!user) return;
-    const investment = investments.find(i => i.id === investmentId);
-    if (!investment) return;
-
-    // Calc new values
-    const newPrincipal = type === 'in' ? investment.principal + amount : Math.max(0, investment.principal - amount);
-    const updatedInv = { ...investment, principal: newPrincipal };
-
-    const bank = banks.find(b => b.id === investment.bankId);
-    if(!bank) return;
     
-    const newBankBalance = type === 'in' ? bank.balance - amount : bank.balance + amount;
+    setPendingOperations(prev => prev + 1);
+    try {
+      const investment = investments.find(i => i.id === investmentId);
+      if (!investment) return;
 
-    const tx: Transaction = {
-      id: generateId(),
-      description: type === 'in' ? `Aporte: ${investment.name}` : `Resgate: ${investment.name}`,
-      amount: amount,
-      date: new Date().toISOString(),
-      type: 'transfer', 
-      categoryId: SYSTEM_CATEGORY_ID, 
-      bankId: investment.bankId,
-      isCreditCard: false,
-      isReconciled: true
-    };
+      // Calc new values
+      const newPrincipal = type === 'in' ? investment.principal + amount : Math.max(0, investment.principal - amount);
+      const updatedInv = { ...investment, principal: newPrincipal };
 
-    // API
-    await DataService.saveInvestment(user.id, updatedInv);
-    await DataService.updateBankBalance(user.id, bank.id, newBankBalance);
-    await DataService.createTransaction(user.id, tx);
+      const bank = banks.find(b => b.id === investment.bankId);
+      if(!bank) return;
+      
+      const newBankBalance = type === 'in' ? bank.balance - amount : bank.balance + amount;
 
-    // State
-    setInvestments(prev => prev.map(i => i.id === investmentId ? updatedInv : i));
-    setBanks(prev => prev.map(b => b.id === investment.bankId ? { ...b, balance: newBankBalance } : b));
-    setTransactions(prev => [tx, ...prev]);
+      const tx: Transaction = {
+        id: generateId(),
+        description: type === 'in' ? `Aporte: ${investment.name}` : `Resgate: ${investment.name}`,
+        amount: amount,
+        date: new Date().toISOString(),
+        type: 'transfer', 
+        categoryId: SYSTEM_CATEGORY_ID, 
+        bankId: investment.bankId,
+        isCreditCard: false,
+        isReconciled: true
+      };
+
+      // API
+      await DataService.saveInvestment(user.id, updatedInv);
+      await DataService.updateBankBalance(user.id, bank.id, newBankBalance);
+      await DataService.createTransaction(user.id, tx);
+
+      // State
+      setInvestments(prev => prev.map(i => i.id === investmentId ? updatedInv : i));
+      setBanks(prev => prev.map(b => b.id === investment.bankId ? { ...b, balance: newBankBalance } : b));
+      setTransactions(prev => [tx, ...prev]);
+    } finally {
+      setPendingOperations(prev => Math.max(0, prev - 1));
+    }
   };
 
   // --- GETTERS (Sync logic for UI rendering is fine) ---
